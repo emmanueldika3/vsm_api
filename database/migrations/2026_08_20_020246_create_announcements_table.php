@@ -6,24 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-       Schema::create('announcements', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('author_id')->constrained('users')->onDelete('cascade');
-    $table->string('title');
-    $table->text('content');
-    $table->boolean('is_urgent')->default(false);
-    $table->timestamps();
-});
+        Schema::create('announcements', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('author_id')->constrained('users')->onDelete('cascade');
+            $table->string('title');
+            $table->text('content');
+            $table->boolean('is_urgent')->default(false); // 👈 Champ manquant
+            $table->timestamps();
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('announcements');

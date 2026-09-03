@@ -12,6 +12,395 @@
         }
     ],
     "paths": {
+        "/api/admin/dashboard": {
+            "get": {
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "Consulter le tableau de bord administration",
+                "operationId": "5d791593fa555f79374c4860f99705c2",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques d'administration récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "members_overview": {
+                                                    "properties": {
+                                                        "total_members": {
+                                                            "type": "integer",
+                                                            "example": 35
+                                                        },
+                                                        "active_members": {
+                                                            "type": "integer",
+                                                            "example": 30
+                                                        },
+                                                        "new_this_month": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "financial_overview": {
+                                                    "properties": {
+                                                        "total_collected": {
+                                                            "type": "integer",
+                                                            "example": 1250000
+                                                        },
+                                                        "collected_this_month": {
+                                                            "type": "integer",
+                                                            "example": 150000
+                                                        },
+                                                        "pending_this_month": {
+                                                            "type": "integer",
+                                                            "example": 50000
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "events_overview": {
+                                                    "properties": {
+                                                        "upcoming_events": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        },
+                                                        "total_events_this_year": {
+                                                            "type": "integer",
+                                                            "example": 24
+                                                        },
+                                                        "average_attendance_rate": {
+                                                            "type": "string",
+                                                            "example": "82%"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    },
+                    "403": {
+                        "description": "Accès interdit - Rôle Admin requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/announcements": {
+            "get": {
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Liste de tous les communiqués",
+                "description": "Récupère la liste des communiqués triés du plus récent au plus ancien.",
+                "operationId": "018442d06de1537ba02109efdadd7a51",
+                "responses": {
+                    "200": {
+                        "description": "Liste récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "author_id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "title": {
+                                                "type": "string",
+                                                "example": "Réunion générale"
+                                            },
+                                            "content": {
+                                                "type": "string",
+                                                "example": "Ordre du jour : Préparation du prochain match."
+                                            },
+                                            "isUrgent": {
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2026-08-28T14:30:00.000000Z"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2026-08-28T14:30:00.000000Z"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Créer un nouveau communiqué",
+                "description": "Enregistre un nouveau communiqué en base de données.",
+                "operationId": "aafebd32889be036f317a8ec262356ff",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Cotisation mensuelle",
+                                        "maxLength": 255
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Prière de régler vos cotisations avant le 5 du mois."
+                                    },
+                                    "isUrgent": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Communiqué créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "author_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "title": {
+                                            "type": "string",
+                                            "example": "Cotisation mensuelle"
+                                        },
+                                        "content": {
+                                            "type": "string",
+                                            "example": "Prière de régler vos cotisations avant le 5 du mois."
+                                        },
+                                        "isUrgent": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Erreur de validation des données"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/announcements/{id}": {
+            "put": {
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Mettre à jour un communiqué",
+                "description": "Modifie les informations d'un communiqué existant.",
+                "operationId": "fc9e73377f5093b3a925537950ccafd7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du communiqué",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Mise à jour : Réunion générale",
+                                        "maxLength": 255
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "La réunion est reportée à 16h00."
+                                    },
+                                    "isUrgent": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Communiqué mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "author_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "title": {
+                                            "type": "string",
+                                            "example": "Mise à jour : Réunion générale"
+                                        },
+                                        "content": {
+                                            "type": "string",
+                                            "example": "La réunion est reportée à 16h00."
+                                        },
+                                        "isUrgent": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Communiqué non trouvé"
+                    },
+                    "422": {
+                        "description": "Erreur de validation des données"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Supprimer un communiqué",
+                "description": "Supprime définitivement un communiqué de la base de données.",
+                "operationId": "83a5ea4614797a52fe1f4390c5743bd2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du communiqué",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Communiqué supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Communiqué supprimé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Communiqué non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/login": {
             "post": {
                 "tags": [
@@ -70,6 +459,59 @@
                 }
             }
         },
+        "/api/user/role": {
+            "get": {
+                "tags": [
+                    "Authentification & Profil"
+                ],
+                "summary": "Récupère le rôle et les libellés de l'utilisateur connecté",
+                "description": "Retourne le rôle principal de l'utilisateur authentifié ainsi que les titres d'en-tête associés.",
+                "operationId": "dfd55f54c18ca4edd5f97b4cde9d88dc",
+                "responses": {
+                    "200": {
+                        "description": "Rôle récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "role_label": {
+                                                    "type": "string",
+                                                    "example": "Administration Générale"
+                                                },
+                                                "sub_title": {
+                                                    "type": "string",
+                                                    "example": "Bureau Exécutif • PK11"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié (Token Sanctum manquant ou invalide)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/logout": {
             "post": {
                 "tags": [
@@ -89,10 +531,1527 @@
                     }
                 ]
             }
+        },
+        "/contributions/my-status": {
+            "get": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Statut des cotisations du membre connecté",
+                "operationId": "6f752b66731d970728f9874242b729f8",
+                "responses": {
+                    "200": {
+                        "description": "Historique et statut individuel du joueur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "monthly_fee": {
+                                                    "type": "integer",
+                                                    "example": 10000
+                                                },
+                                                "is_up_to_date": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "last_payment_date": {
+                                                    "type": "string",
+                                                    "example": "2026-08-01",
+                                                    "nullable": true
+                                                },
+                                                "balance_due": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/contributions": {
+            "get": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Liste globale des cotisations (Trésorier/Admin)",
+                "operationId": "f7ef2ad60f4efed1610da7a2f1275d48",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Filtrer par mois (ex: 2026-08)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-08"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filtrer par membre spécifique",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bilan global des cotisations et transactions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_amount": {
+                                                    "type": "integer",
+                                                    "example": 450000
+                                                },
+                                                "records": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "user_name": {
+                                                                "type": "string",
+                                                                "example": "Emmanuel Dika"
+                                                            },
+                                                            "amount": {
+                                                                "type": "integer",
+                                                                "example": 10000
+                                                            },
+                                                            "payment_type": {
+                                                                "type": "string",
+                                                                "example": "monthly_fee"
+                                                            },
+                                                            "payment_method": {
+                                                                "type": "string",
+                                                                "example": "orange_money"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "example": "2026-08-01 10:30:00"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Enregistrer un paiement de cotisation (Trésorier/Admin)",
+                "operationId": "82d74ba2480dbc4035a8ed440c7accb5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "amount",
+                                    "payment_type",
+                                    "payment_method"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "amount": {
+                                        "type": "integer",
+                                        "example": 10000
+                                    },
+                                    "payment_type": {
+                                        "type": "string",
+                                        "example": "monthly_fee",
+                                        "enum": [
+                                            "monthly_fee",
+                                            "event_fee",
+                                            "donation"
+                                        ]
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "orange_money",
+                                        "enum": [
+                                            "cash",
+                                            "orange_money",
+                                            "mtn_momo"
+                                        ]
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Cotisation du mois d'Août 2026"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Paiement enregistré avec succès"
+                    },
+                    "422": {
+                        "description": "Erreur de validation des données"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/contributions/{id}": {
+            "put": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Mettre à jour un enregistrement de cotisation",
+                "operationId": "b6f320a094c43d9be3bd64b2c73c36e7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la transaction",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "integer",
+                                        "example": 15000
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "cash"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Ajustement du montant"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Transaction mise à jour"
+                    },
+                    "404": {
+                        "description": "Transaction introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/player": {
+            "get": {
+                "tags": [
+                    "Dashboards"
+                ],
+                "summary": "Données du Dashboard Joueur",
+                "operationId": "d91b4954ce5781c1cbd228839448c6a0",
+                "responses": {
+                    "200": {
+                        "description": "Prochains matchs et état des cotisations du joueur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "next_event": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "title": {
+                                                            "type": "string",
+                                                            "example": "Match amical vs Bonamoussadi"
+                                                        },
+                                                        "type": {
+                                                            "type": "string",
+                                                            "example": "match"
+                                                        },
+                                                        "event_date": {
+                                                            "type": "string",
+                                                            "example": "2026-08-25 07:00:00"
+                                                        },
+                                                        "location": {
+                                                            "type": "string",
+                                                            "example": "Stade Camrail"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "attendance_rate": {
+                                                    "type": "string",
+                                                    "example": "85%"
+                                                },
+                                                "contribution_status": {
+                                                    "type": "string",
+                                                    "example": "Up to date"
+                                                },
+                                                "balance_due": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/coach": {
+            "get": {
+                "tags": [
+                    "Dashboards"
+                ],
+                "summary": "Données du Dashboard Coach",
+                "operationId": "2502ef2f3f06b0aaa5fd979798a7a6bf",
+                "responses": {
+                    "200": {
+                        "description": "Effectif présent et convocations",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_players": {
+                                                    "type": "integer",
+                                                    "example": 24
+                                                },
+                                                "confirmed_presences": {
+                                                    "type": "integer",
+                                                    "example": 18
+                                                },
+                                                "next_session": {
+                                                    "type": "string",
+                                                    "example": "Entraînement - 2026-08-23 06:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/treasurer": {
+            "get": {
+                "tags": [
+                    "Dashboards"
+                ],
+                "summary": "Données du Dashboard Trésorier",
+                "operationId": "f634b7e3af4275feb09ff6b79f243cc4",
+                "responses": {
+                    "200": {
+                        "description": "Bilan financier du club",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_collected": {
+                                                    "type": "integer",
+                                                    "example": 450000
+                                                },
+                                                "pending_payments": {
+                                                    "type": "integer",
+                                                    "example": 120000
+                                                },
+                                                "active_contributors": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/admin": {
+            "get": {
+                "tags": [
+                    "Dashboards"
+                ],
+                "summary": "Données du Dashboard Admin / Président",
+                "operationId": "dbfcf7c8a4ae1eecbc58b64accbd2d92",
+                "responses": {
+                    "200": {
+                        "description": "Vue globale du club",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_members": {
+                                                    "type": "integer",
+                                                    "example": 30
+                                                },
+                                                "active_events": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "fund_balance": {
+                                                    "type": "integer",
+                                                    "example": 450000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/events": {
+            "get": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Liste des matchs et entraînements à venir",
+                "operationId": "3befe2e8582683a8dc70f7b706a5a97d",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrer par type d'événement (training, match)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "training",
+                                "match"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Calendrier récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Event"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Créer un nouvel événement (Admin / Coach)",
+                "operationId": "1ed79d9ab6d41b87387cad6237213e5d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "type",
+                                    "date",
+                                    "location"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Match vs FC Akwa"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "match",
+                                        "enum": [
+                                            "training",
+                                            "match"
+                                        ]
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-08-30 15:30:00"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Stade PK11, Douala"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Match amical de préparation."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Événement créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Événement créé avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès non autorisé"
+                    },
+                    "422": {
+                        "description": "Données de formulaire invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/events/{id}": {
+            "get": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Détails d'un événement",
+                "operationId": "abf4f4bbfe75221b5bab720a701f17b8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'événement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails récupérés avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Event"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Événement introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Modifier un événement (Admin / Coach)",
+                "operationId": "ca1f19a988fe9b1ee4af2f4ff3e724fe",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'événement à modifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Entraînement déplacé"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "training",
+                                        "enum": [
+                                            "training",
+                                            "match"
+                                        ]
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-08-22 07:00:00"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Stade PK11, Douala"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Changement d'horaire exceptionnel."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Événement mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Événement mis à jour avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès non autorisé"
+                    },
+                    "404": {
+                        "description": "Événement introuvable"
+                    },
+                    "422": {
+                        "description": "Données de formulaire invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Supprimer un événement (Admin / Coach)",
+                "operationId": "54be98df9381a8b89013d29e170a31fe",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'événement à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Événement supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Événement supprimé avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès non autorisé"
+                    },
+                    "404": {
+                        "description": "Événement introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/events/{id}/presence": {
+            "post": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Confirmer ou décliner sa présence à un événement",
+                "operationId": "9aeac98bc81671ab109580e0830998fb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'événement (Match / Entraînement)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "description": "Statut de présence du joueur",
+                                        "type": "string",
+                                        "example": "present",
+                                        "enum": [
+                                            "present",
+                                            "absent",
+                                            "uncertain"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Statut de présence mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Votre présence a été enregistrée avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Événement introuvable"
+                    },
+                    "422": {
+                        "description": "Statut de présence invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Liste des membres VSM (avec filtres)",
+                "operationId": "7208c29037df2b8bb02499ba39ed8a78",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filtrer par rôle (player, coach, treasurer, admin)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "player",
+                            "enum": [
+                                "admin",
+                                "treasurer",
+                                "coach",
+                                "player"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Rechercher par nom, prénom ou téléphone",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Dika"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des membres récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Emmanuel Dika"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "dika@vsm.com"
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "example": "+237600000000"
+                                                    },
+                                                    "role": {
+                                                        "type": "string",
+                                                        "example": "player"
+                                                    },
+                                                    "jersey_number": {
+                                                        "type": "integer",
+                                                        "example": 10,
+                                                        "nullable": true
+                                                    },
+                                                    "position": {
+                                                        "type": "string",
+                                                        "example": "Attaquant",
+                                                        "nullable": true
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "photo_url": {
+                                                        "type": "string",
+                                                        "example": "https://vsm.com/storage/avatars/avatar.jpg",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Créer un membre (Admin)",
+                "operationId": "262eb5ca1fdea354023c0a8870442c1e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Samuel Etoo"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "etoo@vsm.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+237690000000",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "Secret123!"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "example": "player",
+                                        "enum": [
+                                            "admin",
+                                            "treasurer",
+                                            "coach",
+                                            "player"
+                                        ]
+                                    },
+                                    "jersey_number": {
+                                        "type": "integer",
+                                        "example": 9,
+                                        "nullable": true
+                                    },
+                                    "position": {
+                                        "type": "string",
+                                        "example": "Attaquant",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Membre créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nouveau membre créé avec succès."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Samuel Etoo"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "etoo@vsm.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "player"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Détails d'un membre",
+                "operationId": "6946bbab7898f59a09e3c8e529a38907",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du membre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Membre trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Emmanuel Dika"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "dika@vsm.com"
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+237600000000"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "player"
+                                                },
+                                                "jersey_number": {
+                                                    "type": "integer",
+                                                    "example": 10,
+                                                    "nullable": true
+                                                },
+                                                "position": {
+                                                    "type": "string",
+                                                    "example": "Attaquant",
+                                                    "nullable": true
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "photo_url": {
+                                                    "type": "string",
+                                                    "example": "https://vsm.com/storage/avatars/avatar.jpg",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Membre introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Mettre à jour un membre",
+                "operationId": "05028d02ea3e9a99abd6260cfe05b179",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Emmanuel Dika"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dika@vsm.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+237699999999",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "NewPassword123!",
+                                        "nullable": true
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "example": "player",
+                                        "nullable": true,
+                                        "enum": [
+                                            "admin",
+                                            "treasurer",
+                                            "coach",
+                                            "player"
+                                        ]
+                                    },
+                                    "jersey_number": {
+                                        "type": "integer",
+                                        "example": 10,
+                                        "nullable": true
+                                    },
+                                    "position": {
+                                        "type": "string",
+                                        "example": "Milieu",
+                                        "nullable": true
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Membre mis à jour",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Informations du membre mises à jour."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Membre introuvable"
+                    },
+                    "422": {
+                        "description": "Données de mise à jour invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Supprimer / Désactiver un membre",
+                "operationId": "b3d28da5dc9de7fc1bd425f93b54ff7b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Membre supprimé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Membre supprimé du club avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Membre introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/user/photo": {
+            "post": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Mise à jour de la photo de profil du membre connecté",
+                "operationId": "9c88b1e6ab5e12af32a3180c92370079",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "photo"
+                                ],
+                                "properties": {
+                                    "photo": {
+                                        "description": "Fichier image (JPG, PNG, WEBP, max 2Mo)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Photo mise à jour",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Photo de profil mise à jour avec succès."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Fichier invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "schemas": {
+            "Event": {
+                "title": "Événement",
+                "description": "Modèle représentant un événement (match ou entraînement)",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Entraînement hebdomadaire"
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "training",
+                        "enum": [
+                            "training",
+                            "match"
+                        ]
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-08-22 06:00:00"
+                    },
+                    "location": {
+                        "type": "string",
+                        "example": "Stade PK11, Douala"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Séance d'entraînement physique et mise en place tactique.",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "UserModel": {
                 "title": "Modèle Utilisateur / Membre VSM",
                 "description": "Représentation JSON d'un utilisateur renvoyée à Flutter",
@@ -152,8 +2111,36 @@
     },
     "tags": [
         {
+            "name": "Administration",
+            "description": "Endpoints réservés aux administrateurs"
+        },
+        {
+            "name": "Announcements",
+            "description": "Endpoints pour la gestion des communiqués officiels VSM"
+        },
+        {
             "name": "Authentification",
             "description": "Authentification"
+        },
+        {
+            "name": "Authentification & Profil",
+            "description": "Authentification & Profil"
+        },
+        {
+            "name": "Trésorerie",
+            "description": "Trésorerie"
+        },
+        {
+            "name": "Dashboards",
+            "description": "Dashboards"
+        },
+        {
+            "name": "Événements",
+            "description": "Événements"
+        },
+        {
+            "name": "Membres",
+            "description": "Membres"
         }
     ],
     "security": [

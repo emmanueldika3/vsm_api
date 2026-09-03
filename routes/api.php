@@ -6,13 +6,16 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\EventController;
-
+use App\Http\Controllers\Api\AnnouncementController;
+use App\Http\Controllers\Api\AdminDashboardController;
+use App\Models\Contribution; 
 /*
 |--------------------------------------------------------------------------
 | Routes Publiques
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/dashboard/admin', [DashboardController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
@@ -34,11 +37,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/president', [DashboardController::class, 'presidentSummary']);
         Route::get('/admin', [DashboardController::class, 'adminSummary']);
     });
+    //annonces
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/announcements', [AnnouncementController::class, 'store'])->middleware('role:president,admin');
+    Route::post('/announcements', [AnnouncementController::class, 'store']);
+    Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);
+    Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
+});
 
-    // --- GESTION DES MEMBRES VSM ---
+    // Resource endpoints pour la gestion des membres
     Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
+
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
+    
 
     // --- TRÉSORERIE & COTISATIONS ---
     Route::get('/contributions', [ContributionController::class, 'index']);
@@ -64,4 +80,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/events/{id}', [EventController::class, 'update']);
         Route::delete('/events/{id}', [EventController::class, 'destroy']);
     });
-});
+
+    // --- ANNONCES & COMMUNIQUÉS ---
+    Route::apiResource('announcements', AnnouncementController::class);
+
+    // Gestion réservée au Bureau / Admin
+    Route::middleware('can:admin-access')->group(function () {
+        Route::post('/announcements', [AnnouncementController::class, 'store']);
+        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
+    });
+
+  
+
+    Route::middleware('auth:sanctum')->group(function () {
+    // Route::get('/dashboard/admin', [DashboardController::class, 'index']);
+    });
+
+    // dynamisation du vsm_app_bar
+    Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user/role', [AuthController::class, 'userRole']);
+    });
+    });

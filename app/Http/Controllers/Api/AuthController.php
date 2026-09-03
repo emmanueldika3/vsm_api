@@ -64,6 +64,55 @@ class AuthController extends Controller
             'user' => $user,
         ]);
     }
+    #[OA\Get(
+        path: '/api/user/role',
+        summary: 'Récupère le rôle et les libellés de l\'utilisateur connecté',
+        description: 'Retourne le rôle principal de l\'utilisateur authentifié ainsi que les titres d\'en-tête associés.',
+        security: [['sanctum' => []]],
+        tags: ['Authentification & Profil'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Rôle récupéré avec succès',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'role', type: 'string', example: 'admin'),
+                                new OA\Property(property: 'role_label', type: 'string', example: 'Administration Générale'),
+                                new OA\Property(property: 'sub_title', type: 'string', example: 'Bureau Exécutif • PK11')
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Non authentifié (Token Sanctum manquant ou invalide)'
+            )
+        ]
+    )]
+    public function userRole(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'role' => $user->role, // Ex: 'admin', 'coach', 'treasurer', 'player'
+                'role_label' => match($user->role) {
+                    'admin' => 'Administration Générale',
+                    'coach' => 'Direction Technique',
+                    'treasurer' => 'Trésorerie Générale',
+                    default => 'Espace Membre',
+                },
+                'sub_title' => 'Bureau Exécutif • PK11',
+            ],
+        ]);
+    }
 
     /**
      * Déconnexion de l'utilisateur
