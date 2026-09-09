@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->decimal('amount', 12, 2)->default(0.00);
             $table->string('type', 50)->default('cotisation');
-            $table->enum('status', ['pending', 'paid', 'late'])->default('paid');
+            $table->enum('status', ['pending', 'paid', 'late'])->default('pending');
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });

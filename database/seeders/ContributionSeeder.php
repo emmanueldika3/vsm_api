@@ -23,7 +23,9 @@ class ContributionSeeder extends Seeder
             return;
         }
 
-        $types = ['cotisation', 'mensualite', 'amende', 'don'];
+        $types = ['cotisation', 'mensualite', 'amende', 'don', 'match'];
+        
+        // Remplacement des libellés en français par des clés Enum standard
         $statuses = ['paid', 'pending', 'late'];
 
         // Insertion de 20 cotisations de test

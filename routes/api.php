@@ -9,20 +9,40 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Models\Contribution; 
+use App\Http\Controllers\Api\DecaissementController;
+ use App\Http\Controllers\Api\Admin\FinanceController;
+
 /*
 |--------------------------------------------------------------------------
 | Routes Publiques
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/dashboard/admin', [DashboardController::class, 'index']);
-
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
 /*
 |--------------------------------------------------------------------------
 | Routes Protégées (Sanctum)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
+
+    //---prefix admin ----
+
+    // -----BalanceCashCard-----
+   
+
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    
+    // Dashboard principal -> GET api/admin/dashboard
+    Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+
+    // Finances -> GET api/admin/finances/cash-balance
+    Route::prefix('finances')->group(function () {
+        Route::get('/cash-balance', [FinanceController::class, 'getCashBalance']);
+        Route::get('/executed-disbursements', [FinanceController::class, 'getExecutedDisbursements']);
+    });
+});
+
 
     // --- AUTHENTIFICATION & PROFIL ---
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -37,6 +57,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/president', [DashboardController::class, 'presidentSummary']);
         Route::get('/admin', [DashboardController::class, 'adminSummary']);
     });
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Consultation des dépenses
+    Route::get('/decaissements', [DecaissementController::class, 'index']);
+    
+    // Bouton Ordonner (Président)
+    Route::post('/decaissements/{id}/ordonner', [DecaissementController::class, 'ordonner']);
+});
     //annonces
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/announcements', [AnnouncementController::class, 'store'])->middleware('role:president,admin');

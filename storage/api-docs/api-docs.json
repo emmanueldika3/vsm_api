@@ -1,14 +1,14 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "API VSM Mobile",
-        "description": "Documentation API VSM PK11",
+        "title": "VSM PK11 API Documentation",
+        "description": "API de gestion des membres et finances du club VSM PK11",
         "version": "1.0.0"
     },
     "servers": [
         {
             "url": "http://127.0.0.1:8000",
-            "description": "Serveur Local"
+            "description": "Serveur local de développement"
         }
     ],
     "paths": {
@@ -106,6 +106,176 @@
                 ]
             }
         },
+        "/api/admin/finances/cash-balance": {
+            "get": {
+                "tags": [
+                    "Admin Finances"
+                ],
+                "summary": "Obtenir le solde disponible en caisse",
+                "description": "Calcule le solde net disponible (Cotisations reçues - Dépenses exécutées).",
+                "operationId": "5443305d84796d548042f3900ab5b60c",
+                "responses": {
+                    "200": {
+                        "description": "Solde récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_balance": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 1250000
+                                                },
+                                                "currency": {
+                                                    "type": "string",
+                                                    "example": "XAF"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors du calcul du solde..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/finances/executed-disbursements": {
+            "get": {
+                "tags": [
+                    "Admin Finances"
+                ],
+                "summary": "Obtenir le cumul des décaissements exécutés",
+                "description": "Calcule le total des dépenses décaissées (status = executed) et leur nombre.",
+                "operationId": "67209a4a88d2cfc20ecd1bd77356970b",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des décaissements récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_executed": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 450000
+                                                },
+                                                "currency": {
+                                                    "type": "string",
+                                                    "example": "XAF"
+                                                },
+                                                "executed_count": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors du calcul des décaissements..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/announcements": {
             "get": {
                 "tags": [
@@ -167,7 +337,7 @@
                     "Announcements"
                 ],
                 "summary": "Créer un nouveau communiqué",
-                "description": "Enregistre un nouveau communiqué en base de données.",
+                "description": "Enregistre un nouveau communiqué en base de données (Réservé au bureau et au coach).",
                 "operationId": "aafebd32889be036f317a8ec262356ff",
                 "requestBody": {
                     "required": true,
@@ -239,6 +409,22 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Accès refusé - Rôle insuffisant",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Accès refusé. Seul le bureau/coach peut créer un communiqué."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "description": "Non authentifié"
                     },
@@ -303,50 +489,13 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Communiqué mis à jour avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "author_id": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "title": {
-                                            "type": "string",
-                                            "example": "Mise à jour : Réunion générale"
-                                        },
-                                        "content": {
-                                            "type": "string",
-                                            "example": "La réunion est reportée à 16h00."
-                                        },
-                                        "isUrgent": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Communiqué mis à jour avec succès"
+                    },
+                    "403": {
+                        "description": "Accès refusé - Rôle insuffisant"
                     },
                     "404": {
                         "description": "Communiqué non trouvé"
-                    },
-                    "422": {
-                        "description": "Erreur de validation des données"
                     }
                 },
                 "security": [
@@ -375,20 +524,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Communiqué supprimé avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Communiqué supprimé"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Communiqué supprimé avec succès"
+                    },
+                    "403": {
+                        "description": "Accès refusé - Rôle insuffisant"
                     },
                     "404": {
                         "description": "Communiqué non trouvé"
@@ -1032,6 +1171,161 @@
                 ]
             }
         },
+        "/api/decaissements": {
+            "get": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Consulter la liste des décaissements et les statistiques financières",
+                "operationId": "de12008acb8f90de634f619fd1946a89",
+                "responses": {
+                    "200": {
+                        "description": "Liste des décaissements récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "stats": {
+                                            "properties": {
+                                                "total_demande": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 150000
+                                                },
+                                                "total_ordonne": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100000
+                                                },
+                                                "total_en_attente": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50000
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/decaissements/{id}/ordonner": {
+            "post": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Ordonner un décaissement (Réservé au Président)",
+                "operationId": "f11ac8285732c5f92f5fe56e1117173a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du décaissement à ordonner",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Décaissement ordonné et membres notifiés",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Décaissement ordonné avec succès et membres notifiés."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Décaissement déjà traité",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ce décaissement a déjà été traité."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Accès refusé - Rôle Président requis",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Seul le Président est habilité à ordonner un décaissement."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Décaissement introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/events": {
             "get": {
                 "tags": [
@@ -1459,34 +1753,96 @@
                 ]
             }
         },
-        "/users": {
+        "/api/member/profile": {
+            "get": {
+                "tags": [
+                    "Membre & Profil"
+                ],
+                "summary": "Récupère le profil du membre connecté",
+                "description": "Retourne les informations nécessaires pour le composant MemberProfileCard de l'application mobile.",
+                "operationId": "a3c6f57bdd140f494d761a558815e19c",
+                "responses": {
+                    "200": {
+                        "description": "Profil du membre récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "full_name": {
+                                                    "type": "string",
+                                                    "example": "Emmanuel Dika"
+                                                },
+                                                "position": {
+                                                    "type": "string",
+                                                    "example": "Milieu Offensif"
+                                                },
+                                                "role_title": {
+                                                    "type": "string",
+                                                    "example": "Administrateur"
+                                                },
+                                                "photo_url": {
+                                                    "type": "string",
+                                                    "example": "https://vsm-pk11.cm/storage/avatars/dika.jpg",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/users": {
             "get": {
                 "tags": [
                     "Membres"
                 ],
-                "summary": "Liste des membres VSM (avec filtres)",
-                "operationId": "7208c29037df2b8bb02499ba39ed8a78",
+                "summary": "Liste des membres VSM (avec filtres et compteur)",
+                "operationId": "566aed8efb436ca506e0ef51a032ecd9",
                 "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filtrer les membres par statut d'activité (true pour membres actifs)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    },
                     {
                         "name": "role",
                         "in": "query",
-                        "description": "Filtrer par rôle (player, coach, treasurer, admin)",
+                        "description": "Filtrer par rôle (president, admin, treasurer, coach, player)",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "example": "player",
-                            "enum": [
-                                "admin",
-                                "treasurer",
-                                "coach",
-                                "player"
-                            ]
+                            "example": "player"
                         }
                     },
                     {
                         "name": "search",
                         "in": "query",
-                        "description": "Rechercher par nom, prénom ou téléphone",
+                        "description": "Rechercher par nom, email ou téléphone",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -1496,7 +1852,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Liste des membres récupérée avec succès",
+                        "description": "Liste des utilisateurs récupérée avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1519,25 +1875,23 @@
                                                     },
                                                     "email": {
                                                         "type": "string",
-                                                        "example": "dika@vsm.com"
+                                                        "example": "admin@vsm.com"
                                                     },
                                                     "phone": {
                                                         "type": "string",
-                                                        "example": "+237600000000"
+                                                        "example": "690000000"
                                                     },
                                                     "role": {
                                                         "type": "string",
-                                                        "example": "player"
-                                                    },
-                                                    "jersey_number": {
-                                                        "type": "integer",
-                                                        "example": 10,
-                                                        "nullable": true
+                                                        "example": "president"
                                                     },
                                                     "position": {
                                                         "type": "string",
-                                                        "example": "Attaquant",
-                                                        "nullable": true
+                                                        "example": "Milieu"
+                                                    },
+                                                    "jersey_number": {
+                                                        "type": "integer",
+                                                        "example": 10
                                                     },
                                                     "is_active": {
                                                         "type": "boolean",
@@ -1545,12 +1899,15 @@
                                                     },
                                                     "photo_url": {
                                                         "type": "string",
-                                                        "example": "https://vsm.com/storage/avatars/avatar.jpg",
                                                         "nullable": true
                                                     }
                                                 },
                                                 "type": "object"
                                             }
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 8
                                         }
                                     },
                                     "type": "object"
@@ -1560,126 +1917,6 @@
                     },
                     "401": {
                         "description": "Non authentifié"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "Membres"
-                ],
-                "summary": "Créer un membre (Admin)",
-                "operationId": "262eb5ca1fdea354023c0a8870442c1e",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "email",
-                                    "password",
-                                    "role"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Samuel Etoo"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "etoo@vsm.com"
-                                    },
-                                    "phone": {
-                                        "type": "string",
-                                        "example": "+237690000000",
-                                        "nullable": true
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "example": "Secret123!"
-                                    },
-                                    "role": {
-                                        "type": "string",
-                                        "example": "player",
-                                        "enum": [
-                                            "admin",
-                                            "treasurer",
-                                            "coach",
-                                            "player"
-                                        ]
-                                    },
-                                    "jersey_number": {
-                                        "type": "integer",
-                                        "example": 9,
-                                        "nullable": true
-                                    },
-                                    "position": {
-                                        "type": "string",
-                                        "example": "Attaquant",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Membre créé avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Nouveau membre créé avec succès."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 2
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Samuel Etoo"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "etoo@vsm.com"
-                                                },
-                                                "role": {
-                                                    "type": "string",
-                                                    "example": "player"
-                                                },
-                                                "is_active": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Non authentifié"
-                    },
-                    "422": {
-                        "description": "Données invalides"
                     }
                 },
                 "security": [
@@ -1831,7 +2068,8 @@
                                             "admin",
                                             "treasurer",
                                             "coach",
-                                            "player"
+                                            "player",
+                                            "president"
                                         ]
                                     },
                                     "jersey_number": {
@@ -1947,6 +2185,128 @@
                 ]
             }
         },
+        "/users": {
+            "post": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Créer un membre (Admin)",
+                "operationId": "262eb5ca1fdea354023c0a8870442c1e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Samuel Etoo"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "etoo@vsm.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+237690000000",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "Secret123!"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "example": "player",
+                                        "enum": [
+                                            "admin",
+                                            "treasurer",
+                                            "coach",
+                                            "player"
+                                        ]
+                                    },
+                                    "jersey_number": {
+                                        "type": "integer",
+                                        "example": 9,
+                                        "nullable": true
+                                    },
+                                    "position": {
+                                        "type": "string",
+                                        "example": "Attaquant",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Membre créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nouveau membre créé avec succès."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Samuel Etoo"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "etoo@vsm.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "player"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/user/photo": {
             "post": {
                 "tags": [
@@ -2053,14 +2413,8 @@
                 "type": "object"
             },
             "UserModel": {
-                "title": "Modèle Utilisateur / Membre VSM",
-                "description": "Représentation JSON d'un utilisateur renvoyée à Flutter",
-                "required": [
-                    "id",
-                    "name",
-                    "phone",
-                    "role"
-                ],
+                "title": "User Model",
+                "description": "Schéma OpenAPI pour l'utilisateur VSM",
                 "properties": {
                     "id": {
                         "type": "integer",
@@ -2068,44 +2422,26 @@
                     },
                     "name": {
                         "type": "string",
-                        "example": "Emmanuel Dika"
-                    },
-                    "phone": {
-                        "type": "string",
-                        "example": "+237690000000"
+                        "example": "Membre VSM"
                     },
                     "email": {
                         "type": "string",
-                        "format": "email",
-                        "example": "user@vsm.cm",
-                        "nullable": true
-                    },
-                    "photo_url": {
-                        "type": "string",
-                        "example": "http://127.0.0.1:8000/storage/avatars/user_1.jpg",
-                        "nullable": true
+                        "example": "membre@vsm.cm"
                     },
                     "role": {
                         "type": "string",
-                        "example": "player",
-                        "enum": [
-                            "admin",
-                            "player",
-                            "treasurer",
-                            "president",
-                            "coach"
-                        ]
+                        "example": "president"
                     }
                 },
                 "type": "object"
             }
         },
         "securitySchemes": {
-            "bearerAuth": {
-                "type": "apiKey",
-                "description": "Entrez votre jeton Sanctum sous la forme: Bearer {token}",
-                "name": "Authorization",
-                "in": "header"
+            "sanctum": {
+                "type": "http",
+                "description": "Entrez votre jeton d'authentification Sanctum sous la forme: Bearer {token}",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
             }
         }
     },
@@ -2115,8 +2451,16 @@
             "description": "Endpoints réservés aux administrateurs"
         },
         {
+            "name": "Admin Finances",
+            "description": "Gestion financière du tableau de bord d'administration VSM"
+        },
+        {
             "name": "Announcements",
             "description": "Endpoints pour la gestion des communiqués officiels VSM"
+        },
+        {
+            "name": "Décaissements",
+            "description": "Gestion financière et ordonnancement des dépenses par le Président"
         },
         {
             "name": "Authentification",
@@ -2139,13 +2483,12 @@
             "description": "Événements"
         },
         {
+            "name": "Membre & Profil",
+            "description": "Membre & Profil"
+        },
+        {
             "name": "Membres",
             "description": "Membres"
-        }
-    ],
-    "security": [
-        {
-            "bearerAuth": []
         }
     ]
 }
