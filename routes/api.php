@@ -38,9 +38,18 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
 
     // Finances -> GET api/admin/finances/cash-balance
     Route::prefix('finances')->group(function () {
+    // Route solde en caisse    
         Route::get('/cash-balance', [FinanceController::class, 'getCashBalance']);
+    //  Route décaissements exécutés    
         Route::get('/executed-disbursements', [FinanceController::class, 'getExecutedDisbursements']);
+    //  Route décaissements en attentes
+        Route::get('/pending-disbursements', [FinanceController::class, 'getPendingDisbursements']); 
+    //  route Cotisations Perçues
+        Route::get('/collected-contributions', [FinanceController::class, 'getCollectedContributions']);       
     });
+    // Route réservée au Président pour valider/rejeter
+   Route::post('/expenses/{id}/process', [DecaissementController::class, 'processOrdonnancement'])
+        ->middleware('role:president');
 });
 
 
@@ -58,9 +67,9 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
         Route::get('/admin', [DashboardController::class, 'adminSummary']);
     });
 
-Route::middleware('auth:sanctum')->group(function () {
-    // Consultation des dépenses
-    Route::get('/decaissements', [DecaissementController::class, 'index']);
+Route::middleware(['auth:sanctum'])->prefix('decaissements')->group(function () {
+    Route::post('/{id}/ordonner', [DecaissementController::class, 'ordonner'])
+        ->middleware('role:president');
     
     // Bouton Ordonner (Président)
     Route::post('/decaissements/{id}/ordonner', [DecaissementController::class, 'ordonner']);

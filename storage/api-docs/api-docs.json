@@ -276,6 +276,145 @@
                 ]
             }
         },
+        "/api/admin/finances/pending-disbursements": {
+            "get": {
+                "tags": [
+                    "Admin Finances"
+                ],
+                "summary": "Obtenir le cumul des décaissements en attente",
+                "description": "Calcule le total des dépenses en attente de validation (status = pending) et leur nombre.",
+                "operationId": "c0b38ce7c5439d0591d2ff9ecb3ccaeb",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des décaissements en attente récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_pending": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 150000
+                                                },
+                                                "currency": {
+                                                    "type": "string",
+                                                    "example": "XAF"
+                                                },
+                                                "pending_count": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors du calcul des décaissements en attente..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/finances/collected-contributions": {
+            "get": {
+                "tags": [
+                    "Finances"
+                ],
+                "summary": "Obtenir le total des cotisations perçues",
+                "operationId": "e3708b5506a9540c603b69c612e44d14",
+                "responses": {
+                    "200": {
+                        "description": "Succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_collected": {
+                                                    "type": "number",
+                                                    "example": 450000
+                                                },
+                                                "currency": {
+                                                    "type": "string",
+                                                    "example": "XAF"
+                                                },
+                                                "contributions_count": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/announcements": {
             "get": {
                 "tags": [
@@ -1171,79 +1310,19 @@
                 ]
             }
         },
-        "/api/decaissements": {
-            "get": {
-                "tags": [
-                    "Décaissements"
-                ],
-                "summary": "Consulter la liste des décaissements et les statistiques financières",
-                "operationId": "de12008acb8f90de634f619fd1946a89",
-                "responses": {
-                    "200": {
-                        "description": "Liste des décaissements récupérée avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "stats": {
-                                            "properties": {
-                                                "total_demande": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 150000
-                                                },
-                                                "total_ordonne": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 100000
-                                                },
-                                                "total_en_attente": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 50000
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Non authentifié"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/api/decaissements/{id}/ordonner": {
             "post": {
                 "tags": [
                     "Décaissements"
                 ],
                 "summary": "Ordonner un décaissement (Réservé au Président)",
+                "description": "Permet au Président de valider (approved) ou rejeter (rejected) une demande de dépense.",
                 "operationId": "f11ac8285732c5f92f5fe56e1117173a",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID du décaissement à ordonner",
+                        "description": "ID de la dépense/décaissement",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -1251,72 +1330,43 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "approved",
+                                        "enum": [
+                                            "approved",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "rejection_reason": {
+                                        "type": "string",
+                                        "example": "Budget insuffisant",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Décaissement ordonné et membres notifiés",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Décaissement ordonné avec succès et membres notifiés."
-                                        },
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Action enregistrée avec succès"
                     },
-                    "400": {
-                        "description": "Décaissement déjà traité",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Ce décaissement a déjà été traité."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "422": {
+                        "description": "Demande déjà traitée"
                     },
                     "403": {
-                        "description": "Accès refusé - Rôle Président requis",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Seul le Président est habilité à ordonner un décaissement."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Décaissement introuvable"
+                        "description": "Accès refusé"
                     }
                 },
                 "security": [
@@ -2459,8 +2509,8 @@
             "description": "Endpoints pour la gestion des communiqués officiels VSM"
         },
         {
-            "name": "Décaissements",
-            "description": "Gestion financière et ordonnancement des dépenses par le Président"
+            "name": "Finances",
+            "description": "Finances"
         },
         {
             "name": "Authentification",
@@ -2477,6 +2527,10 @@
         {
             "name": "Dashboards",
             "description": "Dashboards"
+        },
+        {
+            "name": "Décaissements",
+            "description": "Décaissements"
         },
         {
             "name": "Événements",
