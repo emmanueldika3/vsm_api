@@ -106,6 +106,298 @@
                 ]
             }
         },
+        "/api/admin/decaissements/pending": {
+            "get": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Obtenir la liste des décaissements en attente",
+                "operationId": "19bcd50dce1bab449a36fcb2c13fca16",
+                "responses": {
+                    "200": {
+                        "description": "Liste des décaissements en attente récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Achat de 10 ballons de match"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Achat chez le fournisseur officiel."
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 150000
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "pending"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-09-09T01:22:21Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/decaissements/metrics/pending": {
+            "get": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Statistiques des décaissements en attente",
+                "operationId": "73a5810e70048682eca1cacaad7488cf",
+                "responses": {
+                    "200": {
+                        "description": "Métriques des décaissements en attente récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "count": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "total_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/decaissements/metrics/executed": {
+            "get": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Statistiques des décaissements ordonnés / exécutés",
+                "operationId": "c856cd94f496f6aaa87e87f6f3f221a9",
+                "responses": {
+                    "200": {
+                        "description": "Métriques des décaissements exécutés et ordonnés récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "count": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "total_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 390000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/decaissements/{id}/ordonner": {
+            "post": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Ordonner un décaissement (Approuver ou Rejeter)",
+                "description": "Met à jour le statut en 'approved' ou 'rejected', enregistre l'utilisateur ordonnateur et met à jour les dates.",
+                "operationId": "13e42d5cb1cc9e6e8d71f3722749affa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la dépense à ordonner",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "approved",
+                                        "enum": [
+                                            "approved",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "rejection_reason": {
+                                        "type": "string",
+                                        "example": "Motif obligatoire uniquement en cas de rejet",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Statut mis à jour avec succès en BDD",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Décaissement approuvé avec succès."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "approved"
+                                                },
+                                                "approved_by": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "approved_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-09-15T13:08:17Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation ou demande déjà traitée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cette demande a déjà été traitée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Dépense introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/admin/finances/cash-balance": {
             "get": {
                 "tags": [
@@ -1088,6 +1380,151 @@
                 ]
             }
         },
+        "/contributions/members-status": {
+            "get": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "État des cotisations et impayés par membre (Trésorier/Admin)",
+                "operationId": "25bd3f74f645d06769b719940f3eaa20",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Mois de référence (ex: 2026-09)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-09"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des membres avec leur statut de paiement et arriérés",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Emmanuel Dika"
+                                                    },
+                                                    "total_expected": {
+                                                        "type": "number",
+                                                        "example": 10000
+                                                    },
+                                                    "total_paid": {
+                                                        "type": "number",
+                                                        "example": 10000
+                                                    },
+                                                    "balance_due": {
+                                                        "type": "number",
+                                                        "example": 0
+                                                    },
+                                                    "payment_status": {
+                                                        "type": "string",
+                                                        "example": "up_to_date"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/contributions/metrics": {
+            "get": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Taux de recouvrement et indicateurs financiers globaux",
+                "operationId": "5a6aa0436f71dcb63cdf72cab3a2cd13",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Période d'évaluation (month ou year)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "month",
+                            "enum": [
+                                "month",
+                                "year"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Indicateurs de performance de la collecte",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_expected": {
+                                                    "type": "number",
+                                                    "example": 200000
+                                                },
+                                                "total_collected": {
+                                                    "type": "number",
+                                                    "example": 150000
+                                                },
+                                                "total_unpaid": {
+                                                    "type": "number",
+                                                    "example": 50000
+                                                },
+                                                "recovery_rate": {
+                                                    "type": "number",
+                                                    "example": 75
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/dashboard/player": {
             "get": {
                 "tags": [
@@ -1306,72 +1743,6 @@
                 "security": [
                     {
                         "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/decaissements/{id}/ordonner": {
-            "post": {
-                "tags": [
-                    "Décaissements"
-                ],
-                "summary": "Ordonner un décaissement (Réservé au Président)",
-                "description": "Permet au Président de valider (approved) ou rejeter (rejected) une demande de dépense.",
-                "operationId": "f11ac8285732c5f92f5fe56e1117173a",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la dépense/décaissement",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "status"
-                                ],
-                                "properties": {
-                                    "status": {
-                                        "type": "string",
-                                        "example": "approved",
-                                        "enum": [
-                                            "approved",
-                                            "rejected"
-                                        ]
-                                    },
-                                    "rejection_reason": {
-                                        "type": "string",
-                                        "example": "Budget insuffisant",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Action enregistrée avec succès"
-                    },
-                    "422": {
-                        "description": "Demande déjà traitée"
-                    },
-                    "403": {
-                        "description": "Accès refusé"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
                     }
                 ]
             }
@@ -2278,7 +2649,8 @@
                                             "admin",
                                             "treasurer",
                                             "coach",
-                                            "player"
+                                            "player",
+                                            "president"
                                         ]
                                     },
                                     "jersey_number": {
@@ -2484,6 +2856,83 @@
                     }
                 },
                 "type": "object"
+            },
+            "Expense": {
+                "title": "Expense",
+                "description": "Modèle représentant une dépense / un décaissement du club",
+                "required": [
+                    "title",
+                    "amount",
+                    "status"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Frais de transport match amical"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Paiement du bus.",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 85000
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "executed",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "executed"
+                        ]
+                    },
+                    "rejection_reason": {
+                        "type": "string",
+                        "example": "Justificatif manquant",
+                        "nullable": true
+                    },
+                    "approved_by": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "executed_by": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "approved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-12T15:30:00Z",
+                        "nullable": true
+                    },
+                    "executed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-13T10:00:00Z",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-12T12:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-13T10:00:00Z"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -2499,6 +2948,10 @@
         {
             "name": "Administration",
             "description": "Endpoints réservés aux administrateurs"
+        },
+        {
+            "name": "Décaissements",
+            "description": "Gestion et suivi des décaissements et ordonnancements de dépenses"
         },
         {
             "name": "Admin Finances",
@@ -2527,10 +2980,6 @@
         {
             "name": "Dashboards",
             "description": "Dashboards"
-        },
-        {
-            "name": "Décaissements",
-            "description": "Décaissements"
         },
         {
             "name": "Événements",

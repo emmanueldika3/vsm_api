@@ -51,6 +51,11 @@ class User extends Authenticatable
         return $this->is_active || $this->status === 'active';
     }
 
+    public function contributions()
+    {
+        return $this->hasMany(Contribution::class);
+    }
+
     /**
      * Vérifie si l'utilisateur est un administrateur
      */

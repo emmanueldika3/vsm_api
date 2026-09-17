@@ -101,7 +101,7 @@ class UserController extends Controller
         return response()->json([
             'status' => 'success',
             'data'   => $users,
-            'count'  => $users->count() // Compteur des membres (renverra 8 pour is_active=true)
+            'count'  => $users->count()
         ], 200);
     }
 
@@ -179,7 +179,7 @@ class UserController extends Controller
                     new OA\Property(property: "email", type: "string", example: "etoo@vsm.com"),
                     new OA\Property(property: "phone", type: "string", nullable: true, example: "+237690000000"),
                     new OA\Property(property: "password", type: "string", example: "Secret123!"),
-                    new OA\Property(property: "role", type: "string", enum: ["admin", "treasurer", "coach", "player"], example: "player"),
+                    new OA\Property(property: "role", type: "string", enum: ["admin", "treasurer", "coach", "player", "president"], example: "player"),
                     new OA\Property(property: "jersey_number", type: "integer", nullable: true, example: 9),
                     new OA\Property(property: "position", type: "string", nullable: true, example: "Attaquant")
                 ]

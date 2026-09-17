@@ -8,9 +8,9 @@ use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\Admin\FinanceController;
+use App\Http\Controllers\Api\Admin\DecaissementController;
 use App\Models\Contribution; 
-use App\Http\Controllers\Api\DecaissementController;
- use App\Http\Controllers\Api\Admin\FinanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,47 +18,20 @@ use App\Http\Controllers\Api\DecaissementController;
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
+
 /*
 |--------------------------------------------------------------------------
 | Routes Protégées (Sanctum)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:sanctum')->group(function () {
-
-    //---prefix admin ----
-
-    // -----BalanceCashCard-----
-   
-
-Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     
-    // Dashboard principal -> GET api/admin/dashboard
-    Route::get('/dashboard', [AdminDashboardController::class, 'index']);
-
-    // Finances -> GET api/admin/finances/cash-balance
-    Route::prefix('finances')->group(function () {
-    // Route solde en caisse    
-        Route::get('/cash-balance', [FinanceController::class, 'getCashBalance']);
-    //  Route décaissements exécutés    
-        Route::get('/executed-disbursements', [FinanceController::class, 'getExecutedDisbursements']);
-    //  Route décaissements en attentes
-        Route::get('/pending-disbursements', [FinanceController::class, 'getPendingDisbursements']); 
-    //  route Cotisations Perçues
-        Route::get('/collected-contributions', [FinanceController::class, 'getCollectedContributions']);       
-    });
-    // Route réservée au Président pour valider/rejeter
-   Route::post('/expenses/{id}/process', [DecaissementController::class, 'processOrdonnancement'])
-        ->middleware('role:president');
-});
-
-
     // --- AUTHENTIFICATION & PROFIL ---
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/user/photo', [UserController::class, 'updatePhoto']);
 
-    // --- DASHBOARDS SPÉCIFIQUES SELON LE RÔLE ---
+    // --- DASHBOARDS SPÉCIFIQUES ---
     Route::prefix('dashboard')->group(function () {
         Route::get('/player', [DashboardController::class, 'playerSummary']);
         Route::get('/coach', [DashboardController::class, 'coachSummary']);
@@ -67,44 +40,56 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
         Route::get('/admin', [DashboardController::class, 'adminSummary']);
     });
 
-Route::middleware(['auth:sanctum'])->prefix('decaissements')->group(function () {
-    Route::post('/{id}/ordonner', [DecaissementController::class, 'ordonner'])
-        ->middleware('role:president');
-    
-    // Bouton Ordonner (Président)
-    Route::post('/decaissements/{id}/ordonner', [DecaissementController::class, 'ordonner']);
-});
-    //annonces
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/announcements', [AnnouncementController::class, 'store'])->middleware('role:president,admin');
-    Route::post('/announcements', [AnnouncementController::class, 'store']);
-    Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);
-    Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
-});
+    // --- ESPACE ADMINISTRATION (`api/admin/*`) ---
+    Route::prefix('admin')->group(function () {
+        
+        // Dashboard Admin
+        Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
-    // Resource endpoints pour la gestion des membres
+        // Finances & Trésorerie
+        Route::prefix('finances')->group(function () {
+            Route::get('/cash-balance', [FinanceController::class, 'getCashBalance']);
+            Route::get('/executed-disbursements', [FinanceController::class, 'getExecutedDisbursements']);
+            Route::get('/pending-disbursements', [FinanceController::class, 'getPendingDisbursements']); 
+            Route::get('/collected-contributions', [FinanceController::class, 'getCollectedContributions']); 
+        });
+
+        // Ordonnancement des Décaissements (`api/admin/decaissements/*`)
+        Route::prefix('decaissements')->group(function () {
+            Route::get('/pending', [DecaissementController::class, 'getPendingDisbursements']);
+            Route::get('/metrics/pending', [DecaissementController::class, 'getPendingMetrics']);
+            Route::get('/metrics/executed', [DecaissementController::class, 'getExecutedMetrics']);
+            Route::post('/{id}/ordonner', [DecaissementController::class, 'processOrdonnancement']);
+        });
+    });
+
+    // --- ALIAS DIRECT HORS ADMIN (`api/decaissements/*`) ---
+    Route::prefix('decaissements')->group(function () {
+        Route::post('/{id}/ordonner', [DecaissementController::class, 'processOrdonnancement']);
+    });
+
+    // --- GESTION DES MEMBRES / USERS ---
     Route::get('/users', [UserController::class, 'index']);
-    Route::post('/users', [UserController::class, 'store']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::put('/users/{id}', [UserController::class, 'update']);
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
-
-
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
-    
 
     // --- TRÉSORERIE & COTISATIONS ---
-    Route::get('/contributions', [ContributionController::class, 'index']);
     Route::get('/contributions/my-status', [ContributionController::class, 'myStatus']);
+    Route::get('/contributions/metrics', [ContributionController::class, 'metrics']);
+    Route::get('/contributions/members-status', [ContributionController::class, 'membersStatus']);
+    Route::get('/contributions', [ContributionController::class, 'index']);
 
-    // --- EVENEMENTS, MATCHS & ENTRAÎNEMENTS ---
+    // --- ÉVÉNEMENTS, MATCHS & ENTRAÎNEMENTS ---
     Route::get('/events', [EventController::class, 'index']);
     Route::get('/events/{id}', [EventController::class, 'show']);
     Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
 
+    // --- ANNONCES & COMMUNIQUÉS ---
+    Route::apiResource('announcements', AnnouncementController::class);
+
     // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM ---
     Route::middleware('can:admin-access')->group(function () {
-        // Membres
+        // Membres (Actions réservées aux admins)
         Route::post('/users', [UserController::class, 'store']);
         Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
@@ -116,25 +101,9 @@ Route::middleware(['auth:sanctum'])->prefix('decaissements')->group(function () 
         Route::post('/events', [EventController::class, 'store']);
         Route::put('/events/{id}', [EventController::class, 'update']);
         Route::delete('/events/{id}', [EventController::class, 'destroy']);
-    });
 
-    // --- ANNONCES & COMMUNIQUÉS ---
-    Route::apiResource('announcements', AnnouncementController::class);
-
-    // Gestion réservée au Bureau / Admin
-    Route::middleware('can:admin-access')->group(function () {
+        // Annonces
         Route::post('/announcements', [AnnouncementController::class, 'store']);
         Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
     });
-
-  
-
-    Route::middleware('auth:sanctum')->group(function () {
-    // Route::get('/dashboard/admin', [DashboardController::class, 'index']);
-    });
-
-    // dynamisation du vsm_app_bar
-    Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user/role', [AuthController::class, 'userRole']);
-    });
-    });
+});

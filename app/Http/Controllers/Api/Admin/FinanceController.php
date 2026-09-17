@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 use App\Models\Contribution;
 use App\Models\Expense;
+use App\Models\Decaissement;
 
 #[OA\Tag(
     name: 'Admin Finances',
@@ -69,7 +70,7 @@ class FinanceController extends Controller
     $totalInflow = Contribution::where('status', 'paid')->sum('amount');
 
     // Total des sorties exécutées
-    $totalOutflow = Decaissement::where('status', 'executed')->sum('amount');
+    $totalOutflow = Expense::where('status', 'executed')->sum('amount');
 
     // Calcul du solde net
     $totalBalance = (float) ($totalInflow - $totalOutflow);
