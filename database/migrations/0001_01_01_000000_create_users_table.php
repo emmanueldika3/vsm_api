@@ -11,28 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('phone')->unique();
-            $table->string('email')->nullable()->unique();
-            $table->string('password');
-            
-            // Rôle dans le club (admin, president, coach, treasurer, player)
-            $table->enum('role', ['admin', 'president', 'coach', 'treasurer', 'player'])->default('player');
-            
-            // Statut du compte (pending, active, rejected, suspended)
-            $table->string('status')->default('pending');
-            $table->boolean('is_active')->default(false);
-            
-            // Profil sportif sur le terrain
-            $table->string('position')->nullable(); // ex: Gardien, Défenseur, Milieu, Attaquant
-            $table->unsignedSmallInteger('jersey_number')->nullable();
-            $table->string('photo_url')->nullable();
-            
-            $table->rememberToken();
-            $table->timestamps();
-        });
+       Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('phone')->unique();
+    $table->string('email')->nullable()->unique();
+    $table->string('password');
+    
+    // Rôle dans le club
+    $table->enum('role', ['admin', 'president', 'coach', 'treasurer', 'player'])->default('player');
+    
+    // Statut unique du compte
+    $table->string('status')->default('pending'); // 'pending', 'active', 'rejected', 'suspended'
+    
+    // Profil sportif
+    $table->string('position')->nullable();
+    $table->unsignedSmallInteger('jersey_number')->nullable();
+    $table->string('photo_url')->nullable();
+    
+    $table->rememberToken();
+    $table->timestamps();
+});
     }
 
     /**

@@ -2241,13 +2241,13 @@
                 "operationId": "566aed8efb436ca506e0ef51a032ecd9",
                 "parameters": [
                     {
-                        "name": "is_active",
+                        "name": "status",
                         "in": "query",
-                        "description": "Filtrer les membres par statut d'activité (true pour membres actifs)",
+                        "description": "Filtrer les membres par statut (active, pending, rejected, suspended)",
                         "required": false,
                         "schema": {
-                            "type": "boolean",
-                            "example": true
+                            "type": "string",
+                            "example": "active"
                         }
                     },
                     {
@@ -2306,6 +2306,10 @@
                                                         "type": "string",
                                                         "example": "president"
                                                     },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
                                                     "position": {
                                                         "type": "string",
                                                         "example": "Milieu"
@@ -2313,10 +2317,6 @@
                                                     "jersey_number": {
                                                         "type": "integer",
                                                         "example": 10
-                                                    },
-                                                    "is_active": {
-                                                        "type": "boolean",
-                                                        "example": true
                                                     },
                                                     "photo_url": {
                                                         "type": "string",
@@ -2345,15 +2345,541 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "post": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Créer un membre (Admin)",
+                "operationId": "be551c1d694a01c164966f58bfa77013",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Samuel Etoo"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "etoo@vsm.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+237690000000",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "Secret123!"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "example": "player",
+                                        "enum": [
+                                            "admin",
+                                            "treasurer",
+                                            "coach",
+                                            "player",
+                                            "president"
+                                        ]
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "pending",
+                                            "active",
+                                            "rejected",
+                                            "suspended"
+                                        ]
+                                    },
+                                    "jersey_number": {
+                                        "type": "integer",
+                                        "example": 9,
+                                        "nullable": true
+                                    },
+                                    "position": {
+                                        "type": "string",
+                                        "example": "Attaquant",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Membre créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nouveau membre créé avec succès."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Samuel Etoo"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "etoo@vsm.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "player"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "/users/{id}": {
+        "/api/users/pending": {
+            "get": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Liste des demandes d'adhésion en attente (Admin)",
+                "operationId": "0cad0a9e30943f832292898603bdc61a",
+                "responses": {
+                    "200": {
+                        "description": "Demandes en attente récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Jean Dupont"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "jean@vsm.com"
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "example": "+237 690 00 00 00"
+                                                    },
+                                                    "position_or_phone": {
+                                                        "type": "string",
+                                                        "example": "+237 690 00 00 00"
+                                                    },
+                                                    "avatar_url": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "request_date": {
+                                                        "type": "string",
+                                                        "example": "17/09/2026"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}/approve": {
+            "post": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Approuver une demande d'adhésion (Admin)",
+                "operationId": "63e7c22b824d6c554fee4acfcd723969",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "role"
+                                ],
+                                "properties": {
+                                    "role": {
+                                        "type": "string",
+                                        "example": "player",
+                                        "enum": [
+                                            "admin",
+                                            "treasurer",
+                                            "coach",
+                                            "player",
+                                            "president"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Membre approuvé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande validée et membre activé."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Membre introuvable"
+                    },
+                    "422": {
+                        "description": "Rôle invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}/reject": {
+            "post": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Rejeter / Supprimer une demande d'adhésion (Admin)",
+                "operationId": "5f57d427c8adfc50c15e6bd338d8e599",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Demande rejetée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La demande d'adhésion a été rejetée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Membre introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}/role": {
+            "put": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Mettre à jour le rôle d'un membre (Admin)",
+                "operationId": "f0858997e40fd6121a9002d7e1120e35",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "role"
+                                ],
+                                "properties": {
+                                    "role": {
+                                        "type": "string",
+                                        "example": "treasurer",
+                                        "enum": [
+                                            "admin",
+                                            "treasurer",
+                                            "coach",
+                                            "player",
+                                            "president"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rôle mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Le rôle du membre a été mis à jour avec succès."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Membre introuvable"
+                    },
+                    "422": {
+                        "description": "Rôle invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}/suspend": {
+            "post": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Suspendre l'accès d'un membre (Admin)",
+                "operationId": "a248a36137876571be245af252d2338f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Membre suspendu avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "L'accès du membre a été suspendu."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Membre introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}/activate": {
+            "post": {
+                "tags": [
+                    "Membres"
+                ],
+                "summary": "Réactiver l'accès d'un membre suspendu (Admin)",
+                "operationId": "1c8bcbd6b3e99d78f0a1071dd723577c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Membre réactivé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "L'accès du membre a été réactivé avec succès."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Membre introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}": {
             "get": {
                 "tags": [
                     "Membres"
                 ],
                 "summary": "Détails d'un membre",
-                "operationId": "6946bbab7898f59a09e3c8e529a38907",
+                "operationId": "6f51bd5fa2dddcd25e44cfa53dcbd10a",
                 "parameters": [
                     {
                         "name": "id",
@@ -2399,6 +2925,10 @@
                                                     "type": "string",
                                                     "example": "player"
                                                 },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                },
                                                 "jersey_number": {
                                                     "type": "integer",
                                                     "example": 10,
@@ -2408,10 +2938,6 @@
                                                     "type": "string",
                                                     "example": "Attaquant",
                                                     "nullable": true
-                                                },
-                                                "is_active": {
-                                                    "type": "boolean",
-                                                    "example": true
                                                 },
                                                 "photo_url": {
                                                     "type": "string",
@@ -2445,7 +2971,7 @@
                     "Membres"
                 ],
                 "summary": "Mettre à jour un membre",
-                "operationId": "05028d02ea3e9a99abd6260cfe05b179",
+                "operationId": "070e37fc9aff78ae73860751bc990ed3",
                 "parameters": [
                     {
                         "name": "id",
@@ -2493,6 +3019,17 @@
                                             "president"
                                         ]
                                     },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "nullable": true,
+                                        "enum": [
+                                            "pending",
+                                            "active",
+                                            "rejected",
+                                            "suspended"
+                                        ]
+                                    },
                                     "jersey_number": {
                                         "type": "integer",
                                         "example": 10,
@@ -2501,11 +3038,6 @@
                                     "position": {
                                         "type": "string",
                                         "example": "Milieu",
-                                        "nullable": true
-                                    },
-                                    "is_active": {
-                                        "type": "boolean",
-                                        "example": true,
                                         "nullable": true
                                     }
                                 },
@@ -2558,8 +3090,8 @@
                 "tags": [
                     "Membres"
                 ],
-                "summary": "Supprimer / Désactiver un membre",
-                "operationId": "b3d28da5dc9de7fc1bd425f93b54ff7b",
+                "summary": "Supprimer un membre",
+                "operationId": "0b4133ed462528a5e648b88ead11e929",
                 "parameters": [
                     {
                         "name": "id",
@@ -2606,136 +3138,13 @@
                 ]
             }
         },
-        "/users": {
-            "post": {
-                "tags": [
-                    "Membres"
-                ],
-                "summary": "Créer un membre (Admin)",
-                "operationId": "262eb5ca1fdea354023c0a8870442c1e",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "email",
-                                    "password",
-                                    "role"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Samuel Etoo"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "etoo@vsm.com"
-                                    },
-                                    "phone": {
-                                        "type": "string",
-                                        "example": "+237690000000",
-                                        "nullable": true
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "example": "Secret123!"
-                                    },
-                                    "role": {
-                                        "type": "string",
-                                        "example": "player",
-                                        "enum": [
-                                            "admin",
-                                            "treasurer",
-                                            "coach",
-                                            "player",
-                                            "president"
-                                        ]
-                                    },
-                                    "jersey_number": {
-                                        "type": "integer",
-                                        "example": 9,
-                                        "nullable": true
-                                    },
-                                    "position": {
-                                        "type": "string",
-                                        "example": "Attaquant",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Membre créé avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Nouveau membre créé avec succès."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 2
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Samuel Etoo"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "etoo@vsm.com"
-                                                },
-                                                "role": {
-                                                    "type": "string",
-                                                    "example": "player"
-                                                },
-                                                "is_active": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Non authentifié"
-                    },
-                    "422": {
-                        "description": "Données invalides"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/user/photo": {
+        "/api/user/photo": {
             "post": {
                 "tags": [
                     "Membres"
                 ],
                 "summary": "Mise à jour de la photo de profil du membre connecté",
-                "operationId": "9c88b1e6ab5e12af32a3180c92370079",
+                "operationId": "516351ec31cc8306b0a6d105527cb882",
                 "requestBody": {
                     "required": true,
                     "content": {

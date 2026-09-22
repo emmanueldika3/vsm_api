@@ -23,7 +23,7 @@ class UserSeeder extends Seeder
             'position' => 'Milieu',
             'jersey_number' => 10,
             'status' => 'active',
-            'is_active' => true,
+            
         ]);
 
         // 2. Joueur principal
@@ -36,7 +36,7 @@ class UserSeeder extends Seeder
             'position' => 'Milieu',
             'jersey_number' => 8,
             'status' => 'active',
-            'is_active' => true,
+            
         ]);
 
         // 3. Trésorier (Joue en défense)
@@ -49,7 +49,7 @@ class UserSeeder extends Seeder
             'position' => 'Défenseur',
             'jersey_number' => 5,
             'status' => 'active',
-            'is_active' => true,
+           
         ]);
 
         // 4. Coach (Staff pure - Pas de poste terrain ni de maillot)
@@ -62,7 +62,7 @@ class UserSeeder extends Seeder
             'position' => null,
             'jersey_number' => null,
             'status' => 'active',
-            'is_active' => true,
+            
         ]);
 
         // 5. Membres Actifs
@@ -84,7 +84,7 @@ class UserSeeder extends Seeder
                 'position' => $player['position'],
                 'jersey_number' => $player['jersey_number'],
                 'status' => 'active',
-                'is_active' => true,
+                
             ]);
         }
 
@@ -105,7 +105,7 @@ class UserSeeder extends Seeder
                 'position' => $p['position'],
                 'jersey_number' => $p['jersey_number'],
                 'status' => 'pending',
-                'is_active' => false,
+                
             ]);
         }
     }

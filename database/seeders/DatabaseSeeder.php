@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             // 1. Seeders fondamentaux (Création des utilisateurs / membres)
-            UserSeeder::class,
+            // UserSeeder::class,
             
             // 2. Seeders des opérations financières
             ContributionSeeder::class,

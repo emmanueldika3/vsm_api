@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\FinanceController;
 use App\Http\Controllers\Api\Admin\DecaissementController;
-use App\Models\Contribution; 
+use App\Models\Contribution;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,9 +69,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // --- GESTION DES MEMBRES / USERS ---
-    Route::get('/users', [UserController::class, 'index']);
-    Route::get('/users/{id}', [UserController::class, 'show']);
-    Route::put('/users/{id}', [UserController::class, 'update']);
+    // Les routes spécifiques sont placées AVANT l'apiResource pour éviter les conflits d'ID
+    Route::get('/users/pending', [UserController::class, 'pending']);
+    Route::post('/users/{id}/approve', [UserController::class, 'approve']);
+    Route::post('/users/{id}/reject', [UserController::class, 'reject']);
+
+    // Resource CRUD pour les membres (index, show, update, destroy)
+    Route::apiResource('users', UserController::class);
+    Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
+    Route::post('/users/{id}/suspend', [UserController::class, 'suspend']);
+    Route::post('/users/{id}/activate', [UserController::class, 'activate']);
 
     // --- TRÉSORERIE & COTISATIONS ---
     Route::get('/contributions/my-status', [ContributionController::class, 'myStatus']);
@@ -89,10 +96,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM ---
     Route::middleware('can:admin-access')->group(function () {
-        // Membres (Actions réservées aux admins)
-        Route::post('/users', [UserController::class, 'store']);
-        Route::delete('/users/{id}', [UserController::class, 'destroy']);
-
         // Cotisations
         Route::post('/contributions', [ContributionController::class, 'store']);
         Route::put('/contributions/{id}', [ContributionController::class, 'update']);

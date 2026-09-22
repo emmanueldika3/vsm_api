@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use OpenApi\Attributes as OA;
 
 class UserController extends Controller
@@ -19,11 +20,11 @@ class UserController extends Controller
         tags: ["Membres"],
         parameters: [
             new OA\Parameter(
-                name: "is_active",
+                name: "status",
                 in: "query",
                 required: false,
-                description: "Filtrer les membres par statut d'activité (true pour membres actifs)",
-                schema: new OA\Schema(type: "boolean", example: true)
+                description: "Filtrer les membres par statut (active, pending, rejected, suspended)",
+                schema: new OA\Schema(type: "string", example: "active")
             ),
             new OA\Parameter(
                 name: "role",
@@ -57,9 +58,9 @@ class UserController extends Controller
                                     new OA\Property(property: "email", type: "string", example: "admin@vsm.com"),
                                     new OA\Property(property: "phone", type: "string", example: "690000000"),
                                     new OA\Property(property: "role", type: "string", example: "president"),
+                                    new OA\Property(property: "status", type: "string", example: "active"),
                                     new OA\Property(property: "position", type: "string", example: "Milieu"),
                                     new OA\Property(property: "jersey_number", type: "integer", example: 10),
-                                    new OA\Property(property: "is_active", type: "boolean", example: true),
                                     new OA\Property(property: "photo_url", type: "string", nullable: true)
                                 ]
                             )
@@ -75,18 +76,14 @@ class UserController extends Controller
     {
         $query = User::query();
 
-        // Filtre par statut d'activité (ex: ?is_active=true)
-        if ($request->has('is_active')) {
-            $isActive = filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN);
-            $query->where('is_active', $isActive);
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
-        // Filtre par rôle (ex: ?role=player)
         if ($request->filled('role')) {
             $query->where('role', $request->role);
         }
 
-        // Recherche textuelle (ex: ?search=Dika)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -106,7 +103,329 @@ class UserController extends Controller
     }
 
     #[OA\Get(
-        path: "/users/{id}",
+        path: "/api/users/pending",
+        summary: "Liste des demandes d'adhésion en attente (Admin)",
+        security: [["bearerAuth" => []]],
+        tags: ["Membres"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Demandes en attente récupérées avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(
+                            property: "data",
+                            type: "array",
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: "id", type: "integer", example: 12),
+                                    new OA\Property(property: "name", type: "string", example: "Jean Dupont"),
+                                    new OA\Property(property: "email", type: "string", example: "jean@vsm.com"),
+                                    new OA\Property(property: "phone", type: "string", example: "+237 690 00 00 00"),
+                                    new OA\Property(property: "position_or_phone", type: "string", example: "+237 690 00 00 00"),
+                                    new OA\Property(property: "avatar_url", type: "string", nullable: true),
+                                    new OA\Property(property: "request_date", type: "string", example: "17/09/2026")
+                                ]
+                            )
+                        ),
+                        new OA\Property(property: "count", type: "integer", example: 1)
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: "Non authentifié")
+        ]
+    )]
+    public function pending(): JsonResponse
+    {
+        $pendingUsers = User::pending()
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id'                => $user->id,
+                    'name'              => $user->name,
+                    'email'             => $user->email,
+                    'phone'             => $user->phone ?? 'Non renseigné',
+                    'position_or_phone' => $user->phone ?? $user->position ?? 'Non renseigné',
+                    'avatar_url'        => $user->photo_url ?? null,
+                    'request_date'      => $user->created_at ? $user->created_at->format('d/m/Y') : '',
+                    'created_at'        => $user->created_at ? $user->created_at->toIso8601String() : null,
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $pendingUsers,
+            'count'  => $pendingUsers->count()
+        ], 200);
+    }
+
+    #[OA\Post(
+        path: "/api/users/{id}/approve",
+        summary: "Approuver une demande d'adhésion (Admin)",
+        security: [["bearerAuth" => []]],
+        tags: ["Membres"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 12))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["role"],
+                properties: [
+                    new OA\Property(property: "role", type: "string", enum: ["admin", "treasurer", "coach", "player", "president"], example: "player")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Membre approuvé avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(property: "message", type: "string", example: "Demande validée et membre activé."),
+                        new OA\Property(property: "data", type: "object")
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: "Membre introuvable"),
+            new OA\Response(response: 422, description: "Rôle invalide")
+        ]
+    )]
+    public function approve(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'role' => ['required', 'string', Rule::in(['president', 'admin', 'treasurer', 'coach', 'player'])],
+        ]);
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Utilisateur introuvable.'
+            ], 404);
+        }
+
+        $user->status = 'active';
+        $user->role = $request->role;
+        $user->save();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Le membre a été approuvé et son compte est désormais actif.',
+            'data'    => [
+                'id'     => $user->id,
+                'name'   => $user->name,
+                'email'  => $user->email,
+                'role'   => $user->role,
+                'status' => $user->status,
+            ]
+        ], 200);
+    }
+
+    #[OA\Post(
+        path: "/api/users/{id}/reject",
+        summary: "Rejeter / Supprimer une demande d'adhésion (Admin)",
+        security: [["bearerAuth" => []]],
+        tags: ["Membres"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 12))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Demande rejetée avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(property: "message", type: "string", example: "La demande d'adhésion a été rejetée.")
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: "Membre introuvable")
+        ]
+    )]
+    public function reject(int $id): JsonResponse
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Membre introuvable'
+            ], 404);
+        }
+
+        if ($user->photo_url) {
+            $path = parse_url($user->photo_url, PHP_URL_PATH);
+            $relativePath = str_replace('/storage/', '', $path);
+            Storage::disk('public')->delete($relativePath);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => "La demande d'adhésion a été rejetée."
+        ], 200);
+    }
+
+    #[OA\Put(
+        path: "/api/users/{id}/role",
+        summary: "Mettre à jour le rôle d'un membre (Admin)",
+        security: [["bearerAuth" => []]],
+        tags: ["Membres"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 1))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["role"],
+                properties: [
+                    new OA\Property(property: "role", type: "string", enum: ["admin", "treasurer", "coach", "player", "president"], example: "treasurer")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Rôle mis à jour avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(property: "message", type: "string", example: "Le rôle du membre a été mis à jour avec succès."),
+                        new OA\Property(property: "data", type: "object")
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: "Membre introuvable"),
+            new OA\Response(response: 422, description: "Rôle invalide")
+        ]
+    )]
+    public function updateRole(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'role' => ['required', 'string', Rule::in(['president', 'admin', 'treasurer', 'coach', 'player'])],
+        ]);
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Membre introuvable.'
+            ], 404);
+        }
+
+        $user->role = $request->role;
+        $user->save();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Le rôle du membre a été mis à jour avec succès.',
+            'data'    => $user
+        ], 200);
+    }
+
+    #[OA\Post(
+        path: "/api/users/{id}/suspend",
+        summary: "Suspendre l'accès d'un membre (Admin)",
+        security: [["bearerAuth" => []]],
+        tags: ["Membres"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 1))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Membre suspendu avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(property: "message", type: "string", example: "L'accès du membre a été suspendu."),
+                        new OA\Property(property: "data", type: "object")
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: "Membre introuvable")
+        ]
+    )]
+    public function suspend(int $id): JsonResponse
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Membre introuvable.'
+            ], 404);
+        }
+
+        $user->status = 'suspended';
+        $user->save();
+
+        // Révocation de tous ses jetons d'accès Sanctum pour déconnexion immédiate
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => "L'accès du membre a été suspendu.",
+            'data'    => $user
+        ], 200);
+    }
+
+    #[OA\Post(
+        path: "/api/users/{id}/activate",
+        summary: "Réactiver l'accès d'un membre suspendu (Admin)",
+        security: [["bearerAuth" => []]],
+        tags: ["Membres"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 1))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Membre réactivé avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(property: "message", type: "string", example: "L'accès du membre a été réactivé avec succès."),
+                        new OA\Property(property: "data", type: "object")
+                    ]
+                )
+            ),
+            new OA\Response(response: 404, description: "Membre introuvable")
+        ]
+    )]
+    public function activate(int $id): JsonResponse
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Membre introuvable.'
+            ], 404);
+        }
+
+        $user->status = 'active';
+        $user->save();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => "L'accès du membre a été réactivé avec succès.",
+            'data'    => $user
+        ], 200);
+    }
+
+    #[OA\Get(
+        path: "/api/users/{id}",
         summary: "Détails d'un membre",
         security: [["bearerAuth" => []]],
         tags: ["Membres"],
@@ -135,9 +454,9 @@ class UserController extends Controller
                                 new OA\Property(property: "email", type: "string", example: "dika@vsm.com"),
                                 new OA\Property(property: "phone", type: "string", example: "+237600000000"),
                                 new OA\Property(property: "role", type: "string", example: "player"),
+                                new OA\Property(property: "status", type: "string", example: "active"),
                                 new OA\Property(property: "jersey_number", type: "integer", nullable: true, example: 10),
                                 new OA\Property(property: "position", type: "string", nullable: true, example: "Attaquant"),
-                                new OA\Property(property: "is_active", type: "boolean", example: true),
                                 new OA\Property(property: "photo_url", type: "string", nullable: true, example: "https://vsm.com/storage/avatars/avatar.jpg")
                             ]
                         )
@@ -154,19 +473,19 @@ class UserController extends Controller
 
         if (!$user) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Membre introuvable'
             ], 404);
         }
 
         return response()->json([
             'status' => 'success',
-            'data' => $user
+            'data'   => $user
         ]);
     }
 
     #[OA\Post(
-        path: "/users",
+        path: "/api/users",
         summary: "Créer un membre (Admin)",
         security: [["bearerAuth" => []]],
         tags: ["Membres"],
@@ -180,6 +499,7 @@ class UserController extends Controller
                     new OA\Property(property: "phone", type: "string", nullable: true, example: "+237690000000"),
                     new OA\Property(property: "password", type: "string", example: "Secret123!"),
                     new OA\Property(property: "role", type: "string", enum: ["admin", "treasurer", "coach", "player", "president"], example: "player"),
+                    new OA\Property(property: "status", type: "string", enum: ["pending", "active", "rejected", "suspended"], example: "active"),
                     new OA\Property(property: "jersey_number", type: "integer", nullable: true, example: 9),
                     new OA\Property(property: "position", type: "string", nullable: true, example: "Attaquant")
                 ]
@@ -201,7 +521,7 @@ class UserController extends Controller
                                 new OA\Property(property: "name", type: "string", example: "Samuel Etoo"),
                                 new OA\Property(property: "email", type: "string", example: "etoo@vsm.com"),
                                 new OA\Property(property: "role", type: "string", example: "player"),
-                                new OA\Property(property: "is_active", type: "boolean", example: true)
+                                new OA\Property(property: "status", type: "string", example: "active")
                             ]
                         )
                     ]
@@ -214,29 +534,30 @@ class UserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'phone' => 'nullable|string|max:20|unique:users,phone',
-            'password' => 'required|string|min:6',
-            'role' => 'required|string|in:admin,treasurer,coach,player,president',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|string|email|max:255|unique:users,email',
+            'phone'         => 'nullable|string|max:20|unique:users,phone',
+            'password'      => 'required|string|min:6',
+            'role'          => 'required|string|in:admin,treasurer,coach,player,president',
+            'status'        => 'nullable|string|in:pending,active,rejected,suspended',
             'jersey_number' => 'nullable|integer',
-            'position' => 'nullable|string|max:100',
+            'position'      => 'nullable|string|max:100',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        $validated['is_active'] = true;
+        $validated['status'] = $validated['status'] ?? 'active';
 
         $user = User::create($validated);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Nouveau membre créé avec succès.',
-            'data' => $user
+            'data'    => $user
         ], 201);
     }
 
     #[OA\Put(
-        path: "/users/{id}",
+        path: "/api/users/{id}",
         summary: "Mettre à jour un membre",
         security: [["bearerAuth" => []]],
         tags: ["Membres"],
@@ -252,9 +573,9 @@ class UserController extends Controller
                     new OA\Property(property: "phone", type: "string", nullable: true, example: "+237699999999"),
                     new OA\Property(property: "password", type: "string", nullable: true, example: "NewPassword123!"),
                     new OA\Property(property: "role", type: "string", enum: ["admin", "treasurer", "coach", "player", "president"], nullable: true, example: "player"),
+                    new OA\Property(property: "status", type: "string", enum: ["pending", "active", "rejected", "suspended"], nullable: true, example: "active"),
                     new OA\Property(property: "jersey_number", type: "integer", nullable: true, example: 10),
-                    new OA\Property(property: "position", type: "string", nullable: true, example: "Milieu"),
-                    new OA\Property(property: "is_active", type: "boolean", nullable: true, example: true)
+                    new OA\Property(property: "position", type: "string", nullable: true, example: "Milieu")
                 ]
             )
         ),
@@ -281,19 +602,19 @@ class UserController extends Controller
 
         if (!$user) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Membre introuvable'
             ], 404);
         }
 
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $id,
-            'phone' => 'nullable|string|max:20|unique:users,phone,' . $id,
-            'role' => 'nullable|string|in:admin,treasurer,coach,player,president',
+            'name'          => 'sometimes|required|string|max:255',
+            'email'         => 'sometimes|required|email|unique:users,email,' . $id,
+            'phone'         => 'nullable|string|max:20|unique:users,phone,' . $id,
+            'role'          => 'nullable|string|in:admin,treasurer,coach,player,president',
+            'status'        => 'nullable|string|in:pending,active,rejected,suspended',
             'jersey_number' => 'nullable|integer',
-            'position' => 'nullable|string|max:100',
-            'is_active' => 'nullable|boolean',
+            'position'      => 'nullable|string|max:100',
         ]);
 
         if ($request->filled('password')) {
@@ -303,15 +624,15 @@ class UserController extends Controller
         $user->update($validated);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Informations du membre mises à jour.',
-            'data' => $user
+            'data'    => $user
         ]);
     }
 
     #[OA\Delete(
-        path: "/users/{id}",
-        summary: "Supprimer / Désactiver un membre",
+        path: "/api/users/{id}",
+        summary: "Supprimer un membre",
         security: [["bearerAuth" => []]],
         tags: ["Membres"],
         parameters: [
@@ -338,7 +659,7 @@ class UserController extends Controller
 
         if (!$user) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Membre introuvable'
             ], 404);
         }
@@ -352,13 +673,13 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Membre supprimé du club avec succès.'
         ]);
     }
 
     #[OA\Post(
-        path: "/user/photo",
+        path: "/api/user/photo",
         summary: "Mise à jour de la photo de profil du membre connecté",
         security: [["bearerAuth" => []]],
         tags: ["Membres"],
@@ -411,9 +732,9 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Photo de profil mise à jour avec succès.',
-            'data' => $user,
+            'data'    => $user,
         ]);
     }
 }

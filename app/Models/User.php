@@ -17,7 +17,6 @@ use Laravel\Sanctum\HasApiTokens;
     'password',
     'role',
     'status',
-    'is_active',
     'jersey_number',
     'position',
     'photo_url',
@@ -38,58 +37,103 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_active' => 'boolean',
             'jersey_number' => 'integer',
         ];
     }
 
+    // ==========================================
+    // SCOPES DE REQUÊTE
+    // ==========================================
+
     /**
-     * Vérifie si le membre est actif
+     * Scope pour filtrer les membres en attente de validation
      */
-    public function isActive(): bool
+    public function scopePending($query)
     {
-        return $this->is_active || $this->status === 'active';
+        return $query->where('status', 'pending');
     }
+
+    /**
+     * Scope pour filtrer les membres actifs
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    // ==========================================
+    // RELATIONS
+    // ==========================================
 
     public function contributions()
     {
         return $this->hasMany(Contribution::class);
     }
 
-    /**
-     * Vérifie si l'utilisateur est un administrateur
-     */
+    // ==========================================
+    // HELPERS DE STATUT ET RÔLE
+    // ==========================================
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspended';
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    /**
-     * Vérifie si l'utilisateur est le trésorier
-     */
     public function isTreasurer(): bool
     {
         return $this->role === 'treasurer';
     }
 
-    /**
-     * Vérifie si l'utilisateur est le président
-     */
     public function isPresident(): bool
     {
         return $this->role === 'president';
     }
 
-    /**
-     * Vérifie si l'utilisateur est le coach / entraîneur
-     */
     public function isCoach(): bool
     {
         return $this->role === 'coach';
     }
 
+    // ==========================================
+    // ACCESSORS ET FORMATAGE API
+    // ==========================================
+
     /**
-     * Formatage structuré pour les réponses API REST
+     * Accessor pour obtenir l'URL absolue de la photo de profil
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        $photo = $this->attributes['photo_url'] ?? null;
+
+        if ($photo) {
+            return str_starts_with($photo, 'http') ? $photo : asset('storage/' . $photo);
+        }
+
+        return null;
+    }
+
+    /**
+     * Formatage structuré pour les réponses API REST (Flutter)
      */
     public function toApiArray(): array
     {
@@ -100,10 +144,10 @@ class User extends Authenticatable
             'phone' => $this->phone,
             'role' => $this->role,
             'status' => $this->status,
-            'is_active' => (bool) $this->is_active,
             'jersey_number' => $this->jersey_number,
             'position' => $this->position,
             'photo_url' => $this->photo_url,
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }
