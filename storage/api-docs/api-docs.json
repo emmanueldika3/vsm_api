@@ -707,268 +707,54 @@
                 ]
             }
         },
-        "/api/announcements": {
+        "/announcements/latest": {
             "get": {
                 "tags": [
-                    "Announcements"
+                    "Communiqués"
                 ],
-                "summary": "Liste de tous les communiqués",
-                "description": "Récupère la liste des communiqués triés du plus récent au plus ancien.",
-                "operationId": "018442d06de1537ba02109efdadd7a51",
+                "summary": "Récupérer le dernier communiqué publié",
+                "operationId": "0f150e388b2cc63fbca6ae4a5550b015",
                 "responses": {
                     "200": {
-                        "description": "Liste récupérée avec succès",
+                        "description": "Dernier communiqué récupéré avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "id": {
-                                                "type": "integer",
-                                                "example": 1
-                                            },
-                                            "author_id": {
-                                                "type": "integer",
-                                                "example": 1
-                                            },
-                                            "title": {
-                                                "type": "string",
-                                                "example": "Réunion générale"
-                                            },
-                                            "content": {
-                                                "type": "string",
-                                                "example": "Ordre du jour : Préparation du prochain match."
-                                            },
-                                            "isUrgent": {
-                                                "type": "boolean",
-                                                "example": true
-                                            },
-                                            "created_at": {
-                                                "type": "string",
-                                                "format": "date-time",
-                                                "example": "2026-08-28T14:30:00.000000Z"
-                                            },
-                                            "updated_at": {
-                                                "type": "string",
-                                                "format": "date-time",
-                                                "example": "2026-08-28T14:30:00.000000Z"
-                                            }
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
                                         },
-                                        "type": "object"
-                                    }
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Réunion générale"
+                                                },
+                                                "content": {
+                                                    "type": "string",
+                                                    "example": "Ordre du jour : Préparation du tournoi..."
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-09-27T03:00:00.000000Z"
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     }
                 }
-            },
-            "post": {
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Créer un nouveau communiqué",
-                "description": "Enregistre un nouveau communiqué en base de données (Réservé au bureau et au coach).",
-                "operationId": "aafebd32889be036f317a8ec262356ff",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "title",
-                                    "content"
-                                ],
-                                "properties": {
-                                    "title": {
-                                        "type": "string",
-                                        "example": "Cotisation mensuelle",
-                                        "maxLength": 255
-                                    },
-                                    "content": {
-                                        "type": "string",
-                                        "example": "Prière de régler vos cotisations avant le 5 du mois."
-                                    },
-                                    "isUrgent": {
-                                        "type": "boolean",
-                                        "example": false
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Communiqué créé avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 2
-                                        },
-                                        "author_id": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "title": {
-                                            "type": "string",
-                                            "example": "Cotisation mensuelle"
-                                        },
-                                        "content": {
-                                            "type": "string",
-                                            "example": "Prière de régler vos cotisations avant le 5 du mois."
-                                        },
-                                        "isUrgent": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Accès refusé - Rôle insuffisant",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Accès refusé. Seul le bureau/coach peut créer un communiqué."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Non authentifié"
-                    },
-                    "422": {
-                        "description": "Erreur de validation des données"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/announcements/{id}": {
-            "put": {
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Mettre à jour un communiqué",
-                "description": "Modifie les informations d'un communiqué existant.",
-                "operationId": "fc9e73377f5093b3a925537950ccafd7",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du communiqué",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "title",
-                                    "content"
-                                ],
-                                "properties": {
-                                    "title": {
-                                        "type": "string",
-                                        "example": "Mise à jour : Réunion générale",
-                                        "maxLength": 255
-                                    },
-                                    "content": {
-                                        "type": "string",
-                                        "example": "La réunion est reportée à 16h00."
-                                    },
-                                    "isUrgent": {
-                                        "type": "boolean",
-                                        "example": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Communiqué mis à jour avec succès"
-                    },
-                    "403": {
-                        "description": "Accès refusé - Rôle insuffisant"
-                    },
-                    "404": {
-                        "description": "Communiqué non trouvé"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Supprimer un communiqué",
-                "description": "Supprime définitivement un communiqué de la base de données.",
-                "operationId": "83a5ea4614797a52fe1f4390c5743bd2",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID du communiqué",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Communiqué supprimé avec succès"
-                    },
-                    "403": {
-                        "description": "Accès refusé - Rôle insuffisant"
-                    },
-                    "404": {
-                        "description": "Communiqué non trouvé"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
             }
         },
         "/api/login": {
@@ -1752,7 +1538,7 @@
                 "tags": [
                     "Événements"
                 ],
-                "summary": "Liste des matchs et entraînements à venir",
+                "summary": "Liste de tous les matchs et entraînements",
                 "operationId": "3befe2e8582683a8dc70f7b706a5a97d",
                 "parameters": [
                     {
@@ -1816,8 +1602,8 @@
                                 "required": [
                                     "title",
                                     "type",
-                                    "date",
-                                    "location"
+                                    "event_date_time",
+                                    "venue"
                                 ],
                                 "properties": {
                                     "title": {
@@ -1832,14 +1618,22 @@
                                             "match"
                                         ]
                                     },
-                                    "date": {
+                                    "event_date_time": {
                                         "type": "string",
                                         "format": "date-time",
                                         "example": "2026-08-30 15:30:00"
                                     },
-                                    "location": {
+                                    "venue": {
                                         "type": "string",
                                         "example": "Stade PK11, Douala"
+                                    },
+                                    "home_team": {
+                                        "type": "string",
+                                        "example": "VSM FC"
+                                    },
+                                    "away_team": {
+                                        "type": "string",
+                                        "example": "FC Akwa"
                                     },
                                     "description": {
                                         "type": "string",
@@ -1865,6 +1659,9 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Événement créé avec succès."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Event"
                                         }
                                     },
                                     "type": "object"
@@ -1875,11 +1672,46 @@
                     "401": {
                         "description": "Non authentifié"
                     },
-                    "403": {
-                        "description": "Accès non autorisé"
-                    },
                     "422": {
                         "description": "Données de formulaire invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/events/upcoming": {
+            "get": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Prochain événement à venir avec le statut de présence du membre",
+                "operationId": "41950b56e8042b0306fc617addb5b5c3",
+                "responses": {
+                    "200": {
+                        "description": "Prochain événement récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Event"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
                     }
                 },
                 "security": [
@@ -1977,12 +1809,12 @@
                                             "match"
                                         ]
                                     },
-                                    "date": {
+                                    "event_date_time": {
                                         "type": "string",
                                         "format": "date-time",
                                         "example": "2026-08-22 07:00:00"
                                     },
-                                    "location": {
+                                    "venue": {
                                         "type": "string",
                                         "example": "Stade PK11, Douala"
                                     },
@@ -2010,6 +1842,9 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Événement mis à jour avec succès."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Event"
                                         }
                                     },
                                     "type": "object"
@@ -2019,9 +1854,6 @@
                     },
                     "401": {
                         "description": "Non authentifié"
-                    },
-                    "403": {
-                        "description": "Accès non autorisé"
                     },
                     "404": {
                         "description": "Événement introuvable"
@@ -2078,9 +1910,6 @@
                     "401": {
                         "description": "Non authentifié"
                     },
-                    "403": {
-                        "description": "Accès non autorisé"
-                    },
                     "404": {
                         "description": "Événement introuvable"
                     }
@@ -2097,13 +1926,13 @@
                 "tags": [
                     "Événements"
                 ],
-                "summary": "Confirmer ou décliner sa présence à un événement",
+                "summary": "Confirmer, décliner ou signaler son retard à un événement",
                 "operationId": "9aeac98bc81671ab109580e0830998fb",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID de l'événement (Match / Entraînement)",
+                        "description": "ID de l'événement",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -2121,7 +1950,7 @@
                                 ],
                                 "properties": {
                                     "status": {
-                                        "description": "Statut de présence du joueur",
+                                        "description": "Statut de présence du membre",
                                         "type": "string",
                                         "example": "present",
                                         "enum": [
@@ -2149,7 +1978,14 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Votre présence a été enregistrée avec succès."
+                                            "example": "Statut de présence mis à jour avec succès."
+                                        },
+                                        "user_presence": {
+                                            "type": "string",
+                                            "example": "present"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Event"
                                         }
                                     },
                                     "type": "object"
@@ -3226,19 +3062,61 @@
                             "match"
                         ]
                     },
-                    "date": {
+                    "event_date_time": {
                         "type": "string",
                         "format": "date-time",
                         "example": "2026-08-22 06:00:00"
                     },
-                    "location": {
+                    "venue": {
                         "type": "string",
                         "example": "Stade PK11, Douala"
                     },
+                    "home_team": {
+                        "type": "string",
+                        "example": "VSM FC",
+                        "nullable": true
+                    },
+                    "away_team": {
+                        "type": "string",
+                        "example": "FC Akwa",
+                        "nullable": true
+                    },
+                    "home_logo_url": {
+                        "type": "string",
+                        "example": "https://example.com/logo1.png",
+                        "nullable": true
+                    },
+                    "away_logo_url": {
+                        "type": "string",
+                        "example": "https://example.com/logo2.png",
+                        "nullable": true
+                    },
                     "description": {
                         "type": "string",
-                        "example": "Séance d'entraînement physique et mise en place tactique.",
+                        "example": "Séance d'entraînement physique.",
                         "nullable": true
+                    },
+                    "user_presence": {
+                        "type": "string",
+                        "example": "present",
+                        "enum": [
+                            "present",
+                            "absent",
+                            "uncertain",
+                            "none"
+                        ]
+                    },
+                    "present_count": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "uncertain_count": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "absent_count": {
+                        "type": "integer",
+                        "example": 2
                     }
                 },
                 "type": "object"
@@ -3367,12 +3245,12 @@
             "description": "Gestion financière du tableau de bord d'administration VSM"
         },
         {
-            "name": "Announcements",
-            "description": "Endpoints pour la gestion des communiqués officiels VSM"
-        },
-        {
             "name": "Finances",
             "description": "Finances"
+        },
+        {
+            "name": "Communiqués",
+            "description": "Communiqués"
         },
         {
             "name": "Authentification",

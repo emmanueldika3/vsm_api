@@ -13,7 +13,9 @@ return new class extends Migration
             $table->foreignId('author_id')->constrained('users')->onDelete('cascade');
             $table->string('title');
             $table->text('content');
-            $table->boolean('is_urgent')->default(false); // 👈 Champ manquant
+            $table->enum('category', ['training', 'meeting', 'match', 'general'])->default('general');
+            $table->enum('target_audience', ['all', 'board'])->default('all');
+            $table->boolean('is_urgent')->default(false);
             $table->timestamps();
         });
     }

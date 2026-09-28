@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Event;
-use App\Models\User;
 use Carbon\Carbon;
 
 class EventSeeder extends Seeder
@@ -14,62 +13,64 @@ class EventSeeder extends Seeder
      */
     public function run(): void
     {
-        // Récupérer un administrateur ou un utilisateur par défaut pour 'created_by'
-        $adminUser = User::first();
-        $createdBy = $adminUser ? $adminUser->id : null;
+        // 1. Prochain Entraînement
+        Event::create([
+            'title' => 'Entraînement Tactique',
+            'type' => 'training',
+            'home_team' => 'VSM FC',
+            'away_team' => 'Equipe B',
+            'venue' => 'Stade PK11, Douala',
+            'event_date_time' => Carbon::now()->addDays(2)->setHour(17)->setMinute(0)->setSecond(0),
+            'home_logo_url' => null,
+            'away_logo_url' => null,
+            'description' => 'Préparation physique et mise en place tactique avant le match de championnat.',
+            'status' => 'upcoming',
+            'created_by' => 1,
+        ]);
 
-        $events = [
-            [
-                'title' => 'Entraînement Hebdomadaire VSM',
-                'description' => 'Séance d\'entraînement physique et tactique pour l\'équipe vétéran au Stade de PK11.',
-                'location' => 'Stade Municipal de PK11, Douala',
-                'event_date' => Carbon::now()->addDays(2)->setHour(16)->setMinute(0),
-                'type' => 'entrainement',
-                'status' => 'upcoming',
-                'created_by' => $createdBy,
-            ],
-            [
-                'title' => 'Match Amical : VSM PK11 vs Vétérans Bassa',
-                'description' => 'Match amical inter-quartiers suivi d\'une séance de convivialité.',
-                'location' => 'Stade de Japoma (Annexe), Douala',
-                'event_date' => Carbon::now()->addDays(5)->setHour(15)->setMinute(30),
-                'type' => 'match',
-                'status' => 'upcoming',
-                'created_by' => $createdBy,
-            ],
-            [
-                'title' => 'Réunion Mensuelle du Bureau VSM',
-                'description' => 'Évaluation des cotisations, organisation du prochain tournoi et bilans financiers.',
-                'location' => 'Foyer VSM, PK11',
-                'event_date' => Carbon::now()->addDays(10)->setHour(18)->setMinute(0),
-                'type' => 'reunion',
-                'status' => 'upcoming',
-                'created_by' => $createdBy,
-            ],
-            [
-                'title' => 'Match de Championnat : VSM vs Bonabéri Old Stars',
-                'description' => '3ème journée du championnat Vétérans du Littoral.',
-                'location' => 'Stade de PK11, Douala',
-                'event_date' => Carbon::now()->addDays(15)->setHour(16)->setMinute(0),
-                'type' => 'match',
-                'status' => 'upcoming',
-                'created_by' => $createdBy,
-            ],
-            [
-                'title' => 'Dernier Match Amical (Passé)',
-                'description' => 'Victoire 3-1 de VSM PK11.',
-                'location' => 'Stade de PK11, Douala',
-                'event_date' => Carbon::now()->subDays(7)->setHour(16)->setMinute(0),
-                'type' => 'match',
-                'status' => 'completed',
-                'created_by' => $createdBy,
-            ],
-        ];
+        // 2. Prochain Match Amical
+        Event::create([
+            'title' => 'Match Amical vs FC Akwa',
+            'type' => 'match',
+            'home_team' => 'VSM FC',
+            'away_team' => 'FC Akwa',
+            'venue' => 'Stade Municipal de Bonamoussadi, Douala',
+            'event_date_time' => Carbon::now()->addDays(5)->setHour(15)->setMinute(30)->setSecond(0),
+            'home_logo_url' => null,
+            'away_logo_url' => null,
+            'description' => 'Match amical de préparation. Présence obligatoire à 14h30.',
+            'status' => 'upcoming',
+            'created_by' => 1,
+        ]);
 
-        foreach ($events as $eventData) {
-            Event::create($eventData);
-        }
+        // 3. Séance de Récupération
+        Event::create([
+            'title' => 'Séance de Récupération',
+            'type' => 'training',
+            'home_team' => 'VSM FC',
+            'away_team' => 'Equipe A',
+            'venue' => 'Parcours Vita, Douala',
+            'event_date_time' => Carbon::now()->addDays(8)->setHour(7)->setMinute(30)->setSecond(0),
+            'home_logo_url' => null,
+            'away_logo_url' => null,
+            'description' => 'Décrassage et étirements suite au match du week-end.',
+            'status' => 'upcoming',
+            'created_by' => 1,
+        ]);
 
-        $this->command->info("Événements de test créés avec succès pour VSM PK11 !");
+        // 4. Événement Terminé (Historique)
+        Event::create([
+            'title' => 'Entraînement Physique',
+            'type' => 'training',
+            'home_team' => 'VSM FC',
+            'away_team' => 'Equipe A',
+            'venue' => 'Stade PK11, Douala',
+            'event_date_time' => Carbon::now()->subDays(3)->setHour(18)->setMinute(0)->setSecond(0),
+            'home_logo_url' => null,
+            'away_logo_url' => null,
+            'description' => 'Séance axée sur l\'endurance et le renforcement musculaire.',
+            'status' => 'completed',
+            'created_by' => 1,
+        ]);
     }
 }

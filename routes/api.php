@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\FinanceController;
 use App\Http\Controllers\Api\Admin\DecaissementController;
-use App\Models\Contribution;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +17,8 @@ use App\Models\Contribution;
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/events/upcoming', [EventController::class, 'upcoming']);
+Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +26,7 @@ Route::post('/login', [AuthController::class, 'login']);
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:sanctum'])->group(function () {
-    
+
     // --- AUTHENTIFICATION & PROFIL ---
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
@@ -42,7 +43,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // --- ESPACE ADMINISTRATION (`api/admin/*`) ---
     Route::prefix('admin')->group(function () {
-        
+
         // Dashboard Admin
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
@@ -50,8 +51,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::prefix('finances')->group(function () {
             Route::get('/cash-balance', [FinanceController::class, 'getCashBalance']);
             Route::get('/executed-disbursements', [FinanceController::class, 'getExecutedDisbursements']);
-            Route::get('/pending-disbursements', [FinanceController::class, 'getPendingDisbursements']); 
-            Route::get('/collected-contributions', [FinanceController::class, 'getCollectedContributions']); 
+            Route::get('/pending-disbursements', [FinanceController::class, 'getPendingDisbursements']);
+            Route::get('/collected-contributions', [FinanceController::class, 'getCollectedContributions']);
         });
 
         // Ordonnancement des Décaissements (`api/admin/decaissements/*`)
@@ -69,16 +70,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // --- GESTION DES MEMBRES / USERS ---
-    // Les routes spécifiques sont placées AVANT l'apiResource pour éviter les conflits d'ID
     Route::get('/users/pending', [UserController::class, 'pending']);
     Route::post('/users/{id}/approve', [UserController::class, 'approve']);
     Route::post('/users/{id}/reject', [UserController::class, 'reject']);
-
-    // Resource CRUD pour les membres (index, show, update, destroy)
-    Route::apiResource('users', UserController::class);
     Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
     Route::post('/users/{id}/suspend', [UserController::class, 'suspend']);
     Route::post('/users/{id}/activate', [UserController::class, 'activate']);
+
+    // Resource CRUD pour les membres (index, show, update, destroy)
+    Route::apiResource('users', UserController::class);
 
     // --- TRÉSORERIE & COTISATIONS ---
     Route::get('/contributions/my-status', [ContributionController::class, 'myStatus']);
@@ -87,12 +87,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/contributions', [ContributionController::class, 'index']);
 
     // --- ÉVÉNEMENTS, MATCHS & ENTRAÎNEMENTS ---
-    Route::get('/events', [EventController::class, 'index']);
-    Route::get('/events/{id}', [EventController::class, 'show']);
-    Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
+    Route::prefix('events')->group(function () {
+        // Route::get('/upcoming', [EventController::class, 'upcoming']);
+        Route::get('/', [EventController::class, 'index']);
+        Route::get('/{id}', [EventController::class, 'show']);
+        // Route::post('/{id}/presence', [EventController::class, 'updatePresence']);
+    });
 
     // --- ANNONCES & COMMUNIQUÉS ---
-    Route::apiResource('announcements', AnnouncementController::class);
+        Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
+        Route::apiResource('announcements', AnnouncementController::class);
+
 
     // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM ---
     Route::middleware('can:admin-access')->group(function () {
@@ -100,13 +105,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/contributions', [ContributionController::class, 'store']);
         Route::put('/contributions/{id}', [ContributionController::class, 'update']);
 
-        // Programme des matchs / convocations
+        // Gestion des événements (Création, Modification, Suppression)
         Route::post('/events', [EventController::class, 'store']);
         Route::put('/events/{id}', [EventController::class, 'update']);
         Route::delete('/events/{id}', [EventController::class, 'destroy']);
-
-        // Annonces
-        Route::post('/announcements', [AnnouncementController::class, 'store']);
-        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
     });
 });

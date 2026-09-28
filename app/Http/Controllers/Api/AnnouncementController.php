@@ -17,8 +17,9 @@ class AnnouncementController extends Controller
     #[OA\Get(
         path: "/api/announcements",
         summary: "Liste de tous les communiqués",
-        description: "Récupère la liste des communiqués triés du plus récent au plus ancien.",
+        description: "Récupère la liste des communiqués triés du plus récent au plus ancien. Les membres simples ne voient que les annonces destinées à tout le club.",
         tags: ["Announcements"],
+        security: [["sanctum" => []]],
         responses: [
             new OA\Response(
                 response: 200,
@@ -31,21 +32,42 @@ class AnnouncementController extends Controller
                             new OA\Property(property: "author_id", type: "integer", example: 1),
                             new OA\Property(property: "title", type: "string", example: "Réunion générale"),
                             new OA\Property(property: "content", type: "string", example: "Ordre du jour : Préparation du prochain match."),
-                            new OA\Property(property: "isUrgent", type: "boolean", example: true),
+                            new OA\Property(property: "category", type: "string", enum: ["training", "meeting", "match", "general"], example: "meeting"),
+                            new OA\Property(property: "target_audience", type: "string", enum: ["all", "board"], example: "all"),
+                            new OA\Property(property: "is_urgent", type: "boolean", example: true),
                             new OA\Property(property: "created_at", type: "string", format: "date-time", example: "2026-08-28T14:30:00.000000Z"),
-                            new OA\Property(property: "updated_at", type: "string", format: "date-time", example: "2026-08-28T14:30:00.000000Z")
+                            new OA\Property(property: "updated_at", type: "string", format: "date-time", example: "2026-08-28T14:30:00.000000Z"),
+                            new OA\Property(
+                                property: "author",
+                                type: "object",
+                                properties: [
+                                    new OA\Property(property: "id", type: "integer", example: 1),
+                                    new OA\Property(property: "name", type: "string", example: "Emmanuel Dika"),
+                                    new OA\Property(property: "email", type: "string", example: "admin@vsm.com")
+                                ]
+                            )
                         ]
                     )
                 )
             )
         ]
     )]
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(
-            Announcement::orderBy('created_at', 'desc')->get(),
-            200
-        );
+        $user = $request->user();
+
+        $query = Announcement::with('author:id,name,email')
+            ->orderBy('created_at', 'desc');
+
+        // Vérifier si l'utilisateur fait partie du bureau exécutif / staff
+        $isBoardMember = $user && in_array($user->role, ['president', 'admin', 'coach', 'treasurer']);
+
+        // Si l'utilisateur n'est pas membre du bureau, on restreint aux annonces 'all'
+        if (!$isBoardMember) {
+            $query->where('target_audience', 'all');
+        }
+
+        return response()->json($query->paginate(10), 200);
     }
 
     #[OA\Post(
@@ -57,11 +79,13 @@ class AnnouncementController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["title", "content"],
+                required: ["title", "content", "category", "target_audience"],
                 properties: [
                     new OA\Property(property: "title", type: "string", maxLength: 255, example: "Cotisation mensuelle"),
                     new OA\Property(property: "content", type: "string", example: "Prière de régler vos cotisations avant le 5 du mois."),
-                    new OA\Property(property: "isUrgent", type: "boolean", example: false)
+                    new OA\Property(property: "category", type: "string", enum: ["training", "meeting", "match", "general"], example: "general"),
+                    new OA\Property(property: "target_audience", type: "string", enum: ["all", "board"], example: "all"),
+                    new OA\Property(property: "is_urgent", type: "boolean", example: false)
                 ]
             )
         ),
@@ -75,7 +99,9 @@ class AnnouncementController extends Controller
                         new OA\Property(property: "author_id", type: "integer", example: 1),
                         new OA\Property(property: "title", type: "string", example: "Cotisation mensuelle"),
                         new OA\Property(property: "content", type: "string", example: "Prière de régler vos cotisations avant le 5 du mois."),
-                        new OA\Property(property: "isUrgent", type: "boolean", example: false),
+                        new OA\Property(property: "category", type: "string", example: "general"),
+                        new OA\Property(property: "target_audience", type: "string", example: "all"),
+                        new OA\Property(property: "is_urgent", type: "boolean", example: false),
                         new OA\Property(property: "created_at", type: "string", format: "date-time"),
                         new OA\Property(property: "updated_at", type: "string", format: "date-time")
                     ]
@@ -112,19 +138,23 @@ class AnnouncementController extends Controller
         }
 
         $validated = $request->validate([
-            'title'    => 'required|string|max:255',
-            'content'  => 'required|string',
-            'isUrgent' => 'nullable|boolean',
+            'title'           => 'required|string|max:255',
+            'content'         => 'required|string',
+            'category'        => 'required|in:training,meeting,match,general',
+            'target_audience' => 'required|in:all,board',
+            'is_urgent'       => 'nullable|boolean',
         ]);
 
         $announcement = Announcement::create([
-            'author_id' => $user->id,
-            'title'     => $validated['title'],
-            'content'   => $validated['content'],
-            'isUrgent'  => $validated['isUrgent'] ?? false,
+            'author_id'       => $user->id,
+            'title'           => $validated['title'],
+            'content'         => $validated['content'],
+            'category'        => $validated['category'],
+            'target_audience' => $validated['target_audience'],
+            'is_urgent'       => $validated['is_urgent'] ?? false,
         ]);
 
-        return response()->json($announcement, 201);
+        return response()->json($announcement->load('author:id,name,email'), 201);
     }
 
     #[OA\Put(
@@ -145,11 +175,13 @@ class AnnouncementController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["title", "content"],
+                required: ["title", "content", "category", "target_audience"],
                 properties: [
                     new OA\Property(property: "title", type: "string", maxLength: 255, example: "Mise à jour : Réunion générale"),
                     new OA\Property(property: "content", type: "string", example: "La réunion est reportée à 16h00."),
-                    new OA\Property(property: "isUrgent", type: "boolean", example: true)
+                    new OA\Property(property: "category", type: "string", enum: ["training", "meeting", "match", "general"], example: "meeting"),
+                    new OA\Property(property: "target_audience", type: "string", enum: ["all", "board"], example: "board"),
+                    new OA\Property(property: "is_urgent", type: "boolean", example: true)
                 ]
             )
         ),
@@ -179,18 +211,22 @@ class AnnouncementController extends Controller
         }
 
         $validated = $request->validate([
-            'title'    => 'required|string|max:255',
-            'content'  => 'required|string',
-            'isUrgent' => 'nullable|boolean',
+            'title'           => 'required|string|max:255',
+            'content'         => 'required|string',
+            'category'        => 'required|in:training,meeting,match,general',
+            'target_audience' => 'required|in:all,board',
+            'is_urgent'       => 'nullable|boolean',
         ]);
 
         $announcement->update([
-            'title'    => $validated['title'],
-            'content'  => $validated['content'],
-            'isUrgent' => $validated['isUrgent'] ?? $announcement->isUrgent,
+            'title'           => $validated['title'],
+            'content'         => $validated['content'],
+            'category'        => $validated['category'],
+            'target_audience' => $validated['target_audience'],
+            'is_urgent'       => $validated['is_urgent'] ?? $announcement->is_urgent,
         ]);
 
-        return response()->json($announcement, 200);
+        return response()->json($announcement->load('author:id,name,email'), 200);
     }
 
     #[OA\Delete(
@@ -223,6 +259,7 @@ class AnnouncementController extends Controller
             )
         ]
     )]
+   
     public function destroy(Request $request, Announcement $announcement): JsonResponse
     {
         $user = $request->user();
@@ -236,5 +273,119 @@ class AnnouncementController extends Controller
         $announcement->delete();
 
         return response()->json(['message' => 'Communiqué supprimé'], 200);
+    }
+    #[OA\Get(
+        path: "/api/announcements/{id}",
+        summary: "Afficher les détails d'un communiqué",
+        description: "Récupère un communiqué spécifique par son ID. L'accès est restreint aux membres du bureau si l'audience ciblée est 'board'.",
+        tags: ["Announcements"],
+        security: [["sanctum" => []]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID du communiqué",
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Détails du communiqué récupérés avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "id", type: "integer", example: 1),
+                        new OA\Property(property: "author_id", type: "integer", example: 1),
+                        new OA\Property(property: "title", type: "string", example: "Réunion générale"),
+                        new OA\Property(property: "content", type: "string", example: "Ordre du jour : Préparation du prochain match."),
+                        new OA\Property(property: "category", type: "string", enum: ["training", "meeting", "match", "general"], example: "meeting"),
+                        new OA\Property(property: "target_audience", type: "string", enum: ["all", "board"], example: "board"),
+                        new OA\Property(property: "is_urgent", type: "boolean", example: true),
+                        new OA\Property(property: "created_at", type: "string", format: "date-time", example: "2026-08-28T14:30:00.000000Z"),
+                        new OA\Property(property: "updated_at", type: "string", format: "date-time", example: "2026-08-28T14:30:00.000000Z"),
+                        new OA\Property(
+                            property: "author",
+                            type: "object",
+                            properties: [
+                                new OA\Property(property: "id", type: "integer", example: 1),
+                                new OA\Property(property: "name", type: "string", example: "Emmanuel Dika"),
+                                new OA\Property(property: "email", type: "string", example: "admin@vsm.com")
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: "Accès refusé - Ce communiqué est réservé au bureau",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "message", type: "string", example: "Accès refusé. Ce communiqué est réservé au bureau.")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: "Non authentifié"
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Communiqué non trouvé"
+            )
+        ]
+    )]
+    public function show(Request $request, Announcement $announcement): JsonResponse
+    {
+        $user = $request->user();
+
+        // Vérifier si l'utilisateur est membre du bureau
+        $isBoardMember = $user && in_array($user->role, ['president', 'admin', 'coach', 'treasurer']);
+
+        // Si l'annonce est réservée au bureau et que l'utilisateur est un simple membre
+        if ($announcement->target_audience === 'board' && !$isBoardMember) {
+            return response()->json([
+                'message' => 'Accès refusé. Ce communiqué est réservé au bureau.'
+            ], 403);
+        }
+
+        return response()->json($announcement->load('author:id,name,email'), 200);
+    }
+     #[OA\Get(
+        path: "/announcements/latest",
+        summary: "Récupérer le dernier communiqué publié",
+        tags: ["Communiqués"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Dernier communiqué récupéré avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(
+                            property: "data",
+                            type: "object",
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: "id", type: "integer", example: 1),
+                                new OA\Property(property: "title", type: "string", example: "Réunion générale"),
+                                new OA\Property(property: "content", type: "string", example: "Ordre du jour : Préparation du tournoi..."),
+                                new OA\Property(property: "created_at", type: "string", format: "date-time", example: "2026-09-27T03:00:00.000000Z")
+                            ]
+                        )
+                    ]
+                )
+            )
+        ]
+    )]
+    public function latest()
+    {
+        // Récupère le dernier communiqué créé
+        $announcement = Announcement::latest()->first();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $announcement
+        ], 200);
     }
 }

@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             // 2. Seeders des opérations financières
             ContributionSeeder::class,
             ExpenseSeeder::class,
+            // 3- seeders announcements
+            AnnouncementSeeder::class,
         ]);
     }
 }
