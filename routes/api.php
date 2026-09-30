@@ -18,7 +18,11 @@ use App\Http\Controllers\Api\Admin\DecaissementController;
 */
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/events/upcoming', [EventController::class, 'upcoming']);
+Route::get('/events/{id}/presents', [EventController::class, 'getPresentPlayers']);
 Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
+Route::apiResource('announcements', AnnouncementController::class);
+ Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
+ 
 
 /*
 |--------------------------------------------------------------------------
@@ -92,11 +96,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [EventController::class, 'index']);
         Route::get('/{id}', [EventController::class, 'show']);
         // Route::post('/{id}/presence', [EventController::class, 'updatePresence']);
+        // Route::get('/events/{id}/presents', [EventController::class, 'getPresentPlayers']);
+    
     });
 
     // --- ANNONCES & COMMUNIQUÉS ---
-        Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
-        Route::apiResource('announcements', AnnouncementController::class);
+        // Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
+        // Route::apiResource('announcements', AnnouncementController::class);
 
 
     // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM ---

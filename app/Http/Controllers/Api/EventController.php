@@ -441,6 +441,81 @@ class EventController extends Controller
             'data' => $formattedEvent
         ], 200);
     }
+    #[OA\Get(
+        path: "/events/{id}/presents",
+        summary: "Liste des joueurs présents à un événement",
+        security: [["bearerAuth" => []]],
+        tags: ["Événements"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID de l'événement",
+                schema: new OA\Schema(type: "integer", example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Liste des joueurs présents récupérée avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(
+                            property: "data",
+                            type: "array",
+                            items: new OA\Items(
+                                type: "object",
+                                properties: [
+                                    new OA\Property(property: "id", type: "integer", example: 1),
+                                    new OA\Property(property: "name", type: "string", example: "Emmanuel Dika"),
+                                    new OA\Property(property: "number", type: "string", example: "7"),
+                                    new OA\Property(property: "position", type: "string", example: "MID"),
+                                    new OA\Property(property: "status", type: "string", example: "present")
+                                ]
+                            )
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: "Non authentifié"),
+            new OA\Response(response: 404, description: "Événement introuvable")
+        ]
+    )]
+    public function getPresentPlayers($id)
+    {
+        $event = Event::find($id);
+
+        if (!$event) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Événement introuvable.'
+            ], 404);
+        }
+
+        // Récupère les présences avec la relation 'user' associée
+        $presences = EventPresence::with('user')
+            ->where('event_id', $id)
+            ->where('status', 'present')
+            ->get();
+
+        $players = $presences->map(function ($presence) {
+            $user = $presence->user;
+            return [
+                'id' => $user?->id,
+                'name' => $user?->name ?? 'Membre inconnu',
+                'number' => $user?->jersey_number ?? '0',       // Adaptez selon le nom de votre colonne en BD
+                'position' => $user?->preferred_position ?? 'DEF', // Adaptez selon votre modèle User
+                'status' => $presence->status,
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $players
+        ], 200);
+    }
 
     /**
      * Méthode privée pour formater l'événement avec présence et compteurs.

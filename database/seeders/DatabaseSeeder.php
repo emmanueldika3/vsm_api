@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             ExpenseSeeder::class,
             // 3- seeders announcements
             AnnouncementSeeder::class,
+            // 4- seeders event_presences
+            EventPresenceSeeder::class,
         ]);
     }
 }
