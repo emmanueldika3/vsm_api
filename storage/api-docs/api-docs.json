@@ -2487,6 +2487,112 @@
                 ]
             }
         },
+        "/events/{id}/presences/{userId}": {
+            "post": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Mettre à jour le statut de présence d'un membre (Rôle Coach/Admin)",
+                "description": "Permet au coach de modifier le statut d'un joueur incertain en présent (disponible au banc) ou absent.",
+                "operationId": "061b128620e4b77da408db57aca9346c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'événement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID du membre / joueur",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 7
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "description": "Nouveau statut assigné par le coach",
+                                        "type": "string",
+                                        "example": "present",
+                                        "enum": [
+                                            "present",
+                                            "absent",
+                                            "uncertain"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Statut mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statut du membre mis à jour avec succès."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 7
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "present"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Événement ou utilisateur introuvable"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/events/{id}/presents": {
             "get": {
                 "tags": [
@@ -2509,6 +2615,84 @@
                 "responses": {
                     "200": {
                         "description": "Liste des joueurs présents récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Emmanuel Dika"
+                                                    },
+                                                    "number": {
+                                                        "type": "string",
+                                                        "example": "7"
+                                                    },
+                                                    "position": {
+                                                        "type": "string",
+                                                        "example": "MID"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "present"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Événement introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/events/{id}/presences": {
+            "get": {
+                "tags": [
+                    "Événements"
+                ],
+                "summary": "Liste de tous les membres et leurs statuts de présence pour un événement",
+                "operationId": "65cd0bb9a951f403037900d1ffac0c60",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'événement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste de toutes les présences récupérée avec succès",
                         "content": {
                             "application/json": {
                                 "schema": {

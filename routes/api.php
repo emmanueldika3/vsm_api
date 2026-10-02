@@ -18,10 +18,15 @@ use App\Http\Controllers\Api\Admin\DecaissementController;
 */
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/events/upcoming', [EventController::class, 'upcoming']);
+Route::get('/events/{id}/presences', [EventController::class, 'getEventPresences']);
+// Route pour permettre au coach de modifier le statut de présence d'un membre
+    Route::post('/events/{id}/presences/{userId}', [EventController::class, 'updateMemberPresence']);
+// Route::get('/events/{eventId}/presences', [EventController::class, 'index']);
+// Route::post('/events/{eventId}/presences/{memberId}', [EventController::class, 'updateStatus']);
 Route::get('/events/{id}/presents', [EventController::class, 'getPresentPlayers']);
 Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
+Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
 Route::apiResource('announcements', AnnouncementController::class);
- Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
  
 
 /*

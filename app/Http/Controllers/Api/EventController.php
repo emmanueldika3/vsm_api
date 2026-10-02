@@ -441,6 +441,84 @@ class EventController extends Controller
             'data' => $formattedEvent
         ], 200);
     }
+
+    #[OA\Post(
+        path: "/events/{id}/presences/{userId}",
+        summary: "Mettre à jour le statut de présence d'un membre (Rôle Coach/Admin)",
+        description: "Permet au coach de modifier le statut d'un joueur incertain en présent (disponible au banc) ou absent.",
+        security: [["bearerAuth" => []]],
+        tags: ["Événements"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, description: "ID de l'événement", schema: new OA\Schema(type: "integer", example: 1)),
+            new OA\Parameter(name: "userId", in: "path", required: true, description: "ID du membre / joueur", schema: new OA\Schema(type: "integer", example: 7))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["status"],
+                properties: [
+                    new OA\Property(property: "status", type: "string", enum: ["present", "absent", "uncertain"], example: "present", description: "Nouveau statut assigné par le coach")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200, 
+                description: "Statut mis à jour avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(property: "message", type: "string", example: "Statut du membre mis à jour avec succès."),
+                        new OA\Property(
+                            property: "data",
+                            type: "object",
+                            properties: [
+                                new OA\Property(property: "user_id", type: "integer", example: 7),
+                                new OA\Property(property: "status", type: "string", example: "present")
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: "Non authentifié"),
+            new OA\Response(response: 404, description: "Événement ou utilisateur introuvable"),
+            new OA\Response(response: 422, description: "Données invalides")
+        ]
+    )]
+    public function updateMemberPresence(Request $request, $id, $userId)
+    {
+        $event = Event::find($id);
+        if (!$event) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Événement introuvable.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:present,absent,uncertain',
+        ]);
+
+        $presence = EventPresence::updateOrCreate(
+            [
+                'event_id' => $id,
+                'user_id' => $userId,
+            ],
+            [
+                'status' => $validated['status'],
+            ]
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Statut du membre mis à jour avec succès.',
+            'data' => [
+                'user_id' => (int)$userId,
+                'status' => $presence->status
+            ]
+        ], 200);
+    }
+
     #[OA\Get(
         path: "/events/{id}/presents",
         summary: "Liste des joueurs présents à un événement",
@@ -494,7 +572,6 @@ class EventController extends Controller
             ], 404);
         }
 
-        // Récupère les présences avec la relation 'user' associée
         $presences = EventPresence::with('user')
             ->where('event_id', $id)
             ->where('status', 'present')
@@ -505,8 +582,8 @@ class EventController extends Controller
             return [
                 'id' => $user?->id,
                 'name' => $user?->name ?? 'Membre inconnu',
-                'number' => $user?->jersey_number ?? '0',       // Adaptez selon le nom de votre colonne en BD
-                'position' => $user?->preferred_position ?? 'DEF', // Adaptez selon votre modèle User
+                'number' => $user?->jersey_number ?? '0',
+                'position' => $user?->preferred_position ?? 'DEF',
                 'status' => $presence->status,
             ];
         });
@@ -514,6 +591,80 @@ class EventController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $players
+        ], 200);
+    }
+
+    #[OA\Get(
+        path: "/events/{id}/presences",
+        summary: "Liste de tous les membres et leurs statuts de présence pour un événement",
+        security: [["bearerAuth" => []]],
+        tags: ["Événements"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID de l'événement",
+                schema: new OA\Schema(type: "integer", example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Liste de toutes les présences récupérée avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(
+                            property: "data",
+                            type: "array",
+                            items: new OA\Items(
+                                type: "object",
+                                properties: [
+                                    new OA\Property(property: "id", type: "integer", example: 1),
+                                    new OA\Property(property: "name", type: "string", example: "Emmanuel Dika"),
+                                    new OA\Property(property: "number", type: "string", example: "7"),
+                                    new OA\Property(property: "position", type: "string", example: "MID"),
+                                    new OA\Property(property: "status", type: "string", example: "present")
+                                ]
+                            )
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: "Non authentifié"),
+            new OA\Response(response: 404, description: "Événement introuvable")
+        ]
+    )]
+    public function getEventPresences($id)
+    {
+        $event = Event::find($id);
+
+        if (!$event) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Événement introuvable.'
+            ], 404);
+        }
+
+        $presences = EventPresence::with('user')
+            ->where('event_id', $id)
+            ->get();
+
+        $members = $presences->map(function ($presence) {
+            $user = $presence->user;
+            return [
+                'id' => $user?->id,
+                'name' => $user?->name ?? 'Membre inconnu',
+                'number' => $user?->jersey_number ?? '0',
+                'position' => $user?->preferred_position ?? 'DEF',
+                'status' => $presence->status,
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $members
         ], 200);
     }
 
