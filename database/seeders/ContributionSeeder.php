@@ -9,33 +9,26 @@ use Carbon\Carbon;
 
 class ContributionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Récupérer les identifiants de tous les membres
-        $userIds = User::pluck('id')->toArray();
+        // Récupère dynamiquement les IDs réels des utilisateurs entre 15 et 39 s'ils existent
+        $userIds = User::whereBetween('id', [15, 39])->pluck('id')->toArray();
 
-        // Si aucun membre n'existe, on stoppe pour éviter les erreurs de clé étrangère
         if (empty($userIds)) {
-            $this->command->warn("Aucun membre trouvé dans la table 'users'. Veuillez créer des utilisateurs avant de lancer ce seeder.");
+            $this->command->warn("Aucun utilisateur trouvé entre l'ID 15 et 39 !");
             return;
         }
 
         $types = ['cotisation', 'mensualite', 'amende', 'don', 'match'];
-        
-        // Remplacement des libellés en français par des clés Enum standard
         $statuses = ['paid', 'pending', 'late'];
 
-        // Insertion de 20 cotisations de test
         for ($i = 0; $i < 20; $i++) {
             $status = $statuses[array_rand($statuses)];
-            $amount = rand(2, 20) * 1000; // Montants entre 2 000 XAF et 20 000 XAF
+            $amount = rand(2, 20) * 1000;
             $createdAt = Carbon::now()->subDays(rand(1, 60));
 
             Contribution::create([
-                'user_id' => $userIds[array_rand($userIds)],
+                'user_id' => $userIds[array_rand($userIds)], // Tire un ID existant parmi les vrais
                 'amount' => $amount,
                 'type' => $types[array_rand($types)],
                 'status' => $status,
@@ -45,6 +38,6 @@ class ContributionSeeder extends Seeder
             ]);
         }
 
-        $this->command->info("20 cotisations de test ont été insérées avec succès !");
+        $this->command->info("Cotisations insérées avec succès avec de vrais user_id !");
     }
 }

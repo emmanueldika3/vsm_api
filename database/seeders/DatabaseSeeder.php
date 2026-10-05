@@ -13,8 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             // 1. Seeders fondamentaux (Création des utilisateurs / membres)
-            // UserSeeder::class,
-            
+             UserSeeder::class,
             // 2. Seeders des opérations financières
             ContributionSeeder::class,
             ExpenseSeeder::class,
@@ -22,6 +21,8 @@ class DatabaseSeeder extends Seeder
             AnnouncementSeeder::class,
             // 4- seeders event_presences
             EventPresenceSeeder::class,
+            // 5- seeders seasons
+            SeasonSeeder::class,
         ]);
     }
 }

@@ -16,6 +16,9 @@ class Event extends Model
      */
     protected $fillable = [
         'title',
+        'type', 
+        'ceated_by',         
+        'description',
         'home_team',
         'away_team',
         'venue',

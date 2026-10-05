@@ -13,30 +13,34 @@ use App\Http\Controllers\Api\Admin\DecaissementController;
 
 /*
 |--------------------------------------------------------------------------
-| Routes Publiques
+| Routes Publiques (Accessibles sans authentification)
 |--------------------------------------------------------------------------
 */
+
 Route::post('/login', [AuthController::class, 'login']);
+
+// Événements publics
 Route::get('/events/upcoming', [EventController::class, 'upcoming']);
+Route::get('/events', [EventController::class, 'index']);
+Route::get('/events/{id}', [EventController::class, 'show']);
 Route::get('/events/{id}/presences', [EventController::class, 'getEventPresences']);
-// Route pour permettre au coach de modifier le statut de présence d'un membre
-    Route::post('/events/{id}/presences/{userId}', [EventController::class, 'updateMemberPresence']);
-// Route::get('/events/{eventId}/presences', [EventController::class, 'index']);
-// Route::post('/events/{eventId}/presences/{memberId}', [EventController::class, 'updateStatus']);
 Route::get('/events/{id}/presents', [EventController::class, 'getPresentPlayers']);
-Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
+
+// Annonces publiques
 Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
-Route::apiResource('announcements', AnnouncementController::class);
- 
+Route::get('/announcements', [AnnouncementController::class, 'index']);
+Route::get('/announcements/{id}', [AnnouncementController::class, 'show']);
+
 
 /*
 |--------------------------------------------------------------------------
-| Routes Protégées (Sanctum)
+| Routes Protégées (Nécessite authentification Sanctum)
 |--------------------------------------------------------------------------
 */
+
 Route::middleware(['auth:sanctum'])->group(function () {
 
-    // --- AUTHENTIFICATION & PROFIL ---
+    // --- AUTHENTIFICATION & PROFIL UTILISATEUR ---
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/user/photo', [UserController::class, 'updatePhoto']);
@@ -50,9 +54,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/admin', [DashboardController::class, 'adminSummary']);
     });
 
+    // --- GESTION DES PRÉSENCES & ÉVÉNEMENTS (Membres / Coach) ---
+    Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
+    Route::post('/events/{id}/presences/{userId}', [EventController::class, 'updateMemberPresence']);
+
+    // --- FINANCES & COTISATIONS (Membre connecté) ---
+    Route::get('/contributions/my-status', [ContributionController::class, 'myStatus']);
+    Route::get('/contributions/my-financial-summary', [ContributionController::class, 'myFinancialSummary']);
+
     // --- ESPACE ADMINISTRATION (`api/admin/*`) ---
     Route::prefix('admin')->group(function () {
-
         // Dashboard Admin
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
@@ -64,7 +75,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/collected-contributions', [FinanceController::class, 'getCollectedContributions']);
         });
 
-        // Ordonnancement des Décaissements (`api/admin/decaissements/*`)
+        // Décaissements
         Route::prefix('decaissements')->group(function () {
             Route::get('/pending', [DecaissementController::class, 'getPendingDisbursements']);
             Route::get('/metrics/pending', [DecaissementController::class, 'getPendingMetrics']);
@@ -73,52 +84,36 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
     });
 
-    // --- ALIAS DIRECT HORS ADMIN (`api/decaissements/*`) ---
+    // Alias direct hors admin pour les décaissements
     Route::prefix('decaissements')->group(function () {
         Route::post('/{id}/ordonner', [DecaissementController::class, 'processOrdonnancement']);
     });
 
-    // --- GESTION DES MEMBRES / USERS ---
-    Route::get('/users/pending', [UserController::class, 'pending']);
-    Route::post('/users/{id}/approve', [UserController::class, 'approve']);
-    Route::post('/users/{id}/reject', [UserController::class, 'reject']);
-    Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
-    Route::post('/users/{id}/suspend', [UserController::class, 'suspend']);
-    Route::post('/users/{id}/activate', [UserController::class, 'activate']);
-
-    // Resource CRUD pour les membres (index, show, update, destroy)
-    Route::apiResource('users', UserController::class);
-
-    // --- TRÉSORERIE & COTISATIONS ---
-    Route::get('/contributions/my-status', [ContributionController::class, 'myStatus']);
-    Route::get('/contributions/metrics', [ContributionController::class, 'metrics']);
-    Route::get('/contributions/members-status', [ContributionController::class, 'membersStatus']);
-    Route::get('/contributions', [ContributionController::class, 'index']);
-
-    // --- ÉVÉNEMENTS, MATCHS & ENTRAÎNEMENTS ---
-    Route::prefix('events')->group(function () {
-        // Route::get('/upcoming', [EventController::class, 'upcoming']);
-        Route::get('/', [EventController::class, 'index']);
-        Route::get('/{id}', [EventController::class, 'show']);
-        // Route::post('/{id}/presence', [EventController::class, 'updatePresence']);
-        // Route::get('/events/{id}/presents', [EventController::class, 'getPresentPlayers']);
-    
-    });
-
-    // --- ANNONCES & COMMUNIQUÉS ---
-        // Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
-        // Route::apiResource('announcements', AnnouncementController::class);
-
-
-    // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM ---
+    // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM (`can:admin-access`) ---
     Route::middleware('can:admin-access')->group(function () {
-        // Cotisations
+        // Gestion des utilisateurs / membres
+        Route::get('/users/pending', [UserController::class, 'pending']);
+        Route::post('/users/{id}/approve', [UserController::class, 'approve']);
+        Route::post('/users/{id}/reject', [UserController::class, 'reject']);
+        Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
+        Route::post('/users/{id}/suspend', [UserController::class, 'suspend']);
+        Route::post('/users/{id}/activate', [UserController::class, 'activate']);
+        Route::apiResource('users', UserController::class);
+
+        // Gestion globale des cotisations (Trésorier/Admin)
+        Route::get('/contributions', [ContributionController::class, 'index']);
         Route::post('/contributions', [ContributionController::class, 'store']);
         Route::put('/contributions/{id}', [ContributionController::class, 'update']);
+        Route::get('/contributions/members-status', [ContributionController::class, 'membersStatus']);
+        Route::get('/contributions/metrics', [ContributionController::class, 'metrics']);
+        Route::get('/contributions/member-financial-summary/{user}', [ContributionController::class, 'memberFinancialSummary']);
 
         // Gestion des événements (Création, Modification, Suppression)
         Route::post('/events', [EventController::class, 'store']);
         Route::put('/events/{id}', [EventController::class, 'update']);
         Route::delete('/events/{id}', [EventController::class, 'destroy']);
+
+        // Annonces (Création/Modification/Suppression)
+        Route::apiResource('announcements', AnnouncementController::class)->except(['index', 'show']);
     });
 });

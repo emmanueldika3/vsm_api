@@ -1365,16 +1365,16 @@
                 ]
             }
         },
-        "/contributions/my-status": {
+        "/contributions/my-financial-summary": {
             "get": {
                 "tags": [
                     "Trésorerie"
                 ],
-                "summary": "Statut des cotisations du membre connecté",
-                "operationId": "6f752b66731d970728f9874242b729f8",
+                "summary": "Statut des cotisations du membre connecté (Dynamique selon la saison active)",
+                "operationId": "eedcb9b7139da6731d7309b9666972c9",
                 "responses": {
                     "200": {
-                        "description": "Historique et statut individuel du joueur",
+                        "description": "Résumé financier détaillé du membre connecté",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1383,24 +1383,57 @@
                                             "type": "string",
                                             "example": "success"
                                         },
+                                        "season": {
+                                            "type": "string",
+                                            "example": "Saison 2026-2027"
+                                        },
                                         "data": {
                                             "properties": {
-                                                "monthly_fee": {
-                                                    "type": "integer",
-                                                    "example": 10000
-                                                },
-                                                "is_up_to_date": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                },
-                                                "last_payment_date": {
+                                                "member_name": {
                                                     "type": "string",
-                                                    "example": "2026-08-01",
-                                                    "nullable": true
+                                                    "example": "Emmanuel Dika"
                                                 },
-                                                "balance_due": {
-                                                    "type": "integer",
-                                                    "example": 0
+                                                "global_status": {
+                                                    "type": "string",
+                                                    "example": "En Règle"
+                                                },
+                                                "adhesion": {
+                                                    "properties": {
+                                                        "expected": {
+                                                            "type": "number",
+                                                            "example": 3000
+                                                        },
+                                                        "paid": {
+                                                            "type": "number",
+                                                            "example": 3000
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "Payé"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "annual_fee": {
+                                                    "properties": {
+                                                        "expected": {
+                                                            "type": "number",
+                                                            "example": 24000
+                                                        },
+                                                        "paid": {
+                                                            "type": "number",
+                                                            "example": 24000
+                                                        },
+                                                        "remaining": {
+                                                            "type": "number",
+                                                            "example": 0
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "Solde Apuré"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -1413,6 +1446,107 @@
                     },
                     "401": {
                         "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Saison active introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/contributions/member-financial-summary/{user_id}": {
+            "get": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Bilan financier global d'un membre (Dynamique selon la saison active)",
+                "operationId": "059f117fe8f909dc8fa4028d3e60d9a2",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "description": "ID du membre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Résumé financier détaillé du membre",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "season": {
+                                            "type": "string",
+                                            "example": "Saison 2026-2027"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "member_name": {
+                                                    "type": "string",
+                                                    "example": "Emmanuel Dika"
+                                                },
+                                                "global_status": {
+                                                    "type": "string",
+                                                    "example": "En Règle"
+                                                },
+                                                "adhesion": {
+                                                    "properties": {
+                                                        "expected": {
+                                                            "type": "number",
+                                                            "example": 3000
+                                                        },
+                                                        "paid": {
+                                                            "type": "number",
+                                                            "example": 3000
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "Payé"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "annual_fee": {
+                                                    "properties": {
+                                                        "expected": {
+                                                            "type": "number",
+                                                            "example": 24000
+                                                        },
+                                                        "paid": {
+                                                            "type": "number",
+                                                            "example": 24000
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "Solde Apuré"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Membre ou saison active introuvable"
                     }
                 },
                 "security": [
@@ -1539,7 +1673,7 @@
                                         "example": 1
                                     },
                                     "amount": {
-                                        "type": "integer",
+                                        "type": "number",
                                         "example": 10000
                                     },
                                     "payment_type": {
@@ -1547,6 +1681,8 @@
                                         "example": "monthly_fee",
                                         "enum": [
                                             "monthly_fee",
+                                            "annual_fee",
+                                            "adhesion",
                                             "event_fee",
                                             "donation"
                                         ]
@@ -1562,7 +1698,7 @@
                                     },
                                     "notes": {
                                         "type": "string",
-                                        "example": "Cotisation du mois d'Août 2026"
+                                        "example": "Cotisation de la saison"
                                     }
                                 },
                                 "type": "object"
@@ -1611,7 +1747,7 @@
                             "schema": {
                                 "properties": {
                                     "amount": {
-                                        "type": "integer",
+                                        "type": "number",
                                         "example": 15000
                                     },
                                     "payment_method": {
