@@ -1397,32 +1397,15 @@
                                                     "type": "string",
                                                     "example": "En Règle"
                                                 },
-                                                "adhesion": {
+                                                "financial_summary": {
                                                     "properties": {
                                                         "expected": {
                                                             "type": "number",
-                                                            "example": 3000
+                                                            "example": 27000
                                                         },
                                                         "paid": {
                                                             "type": "number",
-                                                            "example": 3000
-                                                        },
-                                                        "status": {
-                                                            "type": "string",
-                                                            "example": "Payé"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "annual_fee": {
-                                                    "properties": {
-                                                        "expected": {
-                                                            "type": "number",
-                                                            "example": 24000
-                                                        },
-                                                        "paid": {
-                                                            "type": "number",
-                                                            "example": 24000
+                                                            "example": 27000
                                                         },
                                                         "remaining": {
                                                             "type": "number",
@@ -1502,32 +1485,19 @@
                                                     "type": "string",
                                                     "example": "En Règle"
                                                 },
-                                                "adhesion": {
+                                                "financial_summary": {
                                                     "properties": {
                                                         "expected": {
                                                             "type": "number",
-                                                            "example": 3000
+                                                            "example": 27000
                                                         },
                                                         "paid": {
                                                             "type": "number",
-                                                            "example": 3000
+                                                            "example": 27000
                                                         },
-                                                        "status": {
-                                                            "type": "string",
-                                                            "example": "Payé"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "annual_fee": {
-                                                    "properties": {
-                                                        "expected": {
+                                                        "remaining": {
                                                             "type": "number",
-                                                            "example": 24000
-                                                        },
-                                                        "paid": {
-                                                            "type": "number",
-                                                            "example": 24000
+                                                            "example": 0
                                                         },
                                                         "status": {
                                                             "type": "string",
@@ -1618,10 +1588,6 @@
                                                                 "type": "integer",
                                                                 "example": 10000
                                                             },
-                                                            "payment_type": {
-                                                                "type": "string",
-                                                                "example": "monthly_fee"
-                                                            },
                                                             "payment_method": {
                                                                 "type": "string",
                                                                 "example": "orange_money"
@@ -1664,7 +1630,6 @@
                                 "required": [
                                     "user_id",
                                     "amount",
-                                    "payment_type",
                                     "payment_method"
                                 ],
                                 "properties": {
@@ -1676,25 +1641,9 @@
                                         "type": "number",
                                         "example": 10000
                                     },
-                                    "payment_type": {
-                                        "type": "string",
-                                        "example": "monthly_fee",
-                                        "enum": [
-                                            "monthly_fee",
-                                            "annual_fee",
-                                            "adhesion",
-                                            "event_fee",
-                                            "donation"
-                                        ]
-                                    },
                                     "payment_method": {
                                         "type": "string",
-                                        "example": "orange_money",
-                                        "enum": [
-                                            "cash",
-                                            "orange_money",
-                                            "mtn_momo"
-                                        ]
+                                        "example": "orange_money"
                                     },
                                     "notes": {
                                         "type": "string",
@@ -1712,209 +1661,6 @@
                     },
                     "422": {
                         "description": "Erreur de validation des données"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/contributions/{id}": {
-            "put": {
-                "tags": [
-                    "Trésorerie"
-                ],
-                "summary": "Mettre à jour un enregistrement de cotisation",
-                "operationId": "b6f320a094c43d9be3bd64b2c73c36e7",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la transaction",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "amount": {
-                                        "type": "number",
-                                        "example": 15000
-                                    },
-                                    "payment_method": {
-                                        "type": "string",
-                                        "example": "cash"
-                                    },
-                                    "notes": {
-                                        "type": "string",
-                                        "example": "Ajustement du montant"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Transaction mise à jour"
-                    },
-                    "404": {
-                        "description": "Transaction introuvable"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/contributions/members-status": {
-            "get": {
-                "tags": [
-                    "Trésorerie"
-                ],
-                "summary": "État des cotisations et impayés par membre (Trésorier/Admin)",
-                "operationId": "25bd3f74f645d06769b719940f3eaa20",
-                "parameters": [
-                    {
-                        "name": "month",
-                        "in": "query",
-                        "description": "Mois de référence (ex: 2026-09)",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "2026-09"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Liste des membres avec leur statut de paiement et arriérés",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Emmanuel Dika"
-                                                    },
-                                                    "total_expected": {
-                                                        "type": "number",
-                                                        "example": 10000
-                                                    },
-                                                    "total_paid": {
-                                                        "type": "number",
-                                                        "example": 10000
-                                                    },
-                                                    "balance_due": {
-                                                        "type": "number",
-                                                        "example": 0
-                                                    },
-                                                    "payment_status": {
-                                                        "type": "string",
-                                                        "example": "up_to_date"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/contributions/metrics": {
-            "get": {
-                "tags": [
-                    "Trésorerie"
-                ],
-                "summary": "Taux de recouvrement et indicateurs financiers globaux",
-                "operationId": "5a6aa0436f71dcb63cdf72cab3a2cd13",
-                "parameters": [
-                    {
-                        "name": "period",
-                        "in": "query",
-                        "description": "Période d'évaluation (month ou year)",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "month",
-                            "enum": [
-                                "month",
-                                "year"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Indicateurs de performance de la collecte",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "total_expected": {
-                                                    "type": "number",
-                                                    "example": 200000
-                                                },
-                                                "total_collected": {
-                                                    "type": "number",
-                                                    "example": 150000
-                                                },
-                                                "total_unpaid": {
-                                                    "type": "number",
-                                                    "example": 50000
-                                                },
-                                                "recovery_rate": {
-                                                    "type": "number",
-                                                    "example": 75
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [
@@ -4099,10 +3845,10 @@
         },
         "securitySchemes": {
             "sanctum": {
-                "type": "http",
-                "description": "Entrez votre jeton d'authentification Sanctum sous la forme: Bearer {token}",
-                "bearerFormat": "JWT",
-                "scheme": "bearer"
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
+                "name": "Authorization",
+                "in": "header"
             }
         }
     },
@@ -4158,6 +3904,11 @@
         {
             "name": "Membres",
             "description": "Membres"
+        }
+    ],
+    "security": [
+        {
+            "sanctum": []
         }
     ]
 }

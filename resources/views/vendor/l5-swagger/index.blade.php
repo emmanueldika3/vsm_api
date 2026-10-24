@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title><?php echo e($documentationTitle); ?></title>
-    <link rel="stylesheet" type="text/css" href="<?php echo e(l5_swagger_asset($documentation, 'swagger-ui.css')); ?>">
-    <link rel="icon" type="image/png" href="<?php echo e(l5_swagger_asset($documentation, 'favicon-32x32.png')); ?>" sizes="32x32"/>
-    <link rel="icon" type="image/png" href="<?php echo e(l5_swagger_asset($documentation, 'favicon-16x16.png')); ?>" sizes="16x16"/>
+    <title>{{ $documentationTitle }}</title>
+    <link rel="stylesheet" type="text/css" href="{{ l5_swagger_asset($documentation, 'swagger-ui.css') }}">
+    <link rel="icon" type="image/png" href="{{ l5_swagger_asset($documentation, 'favicon-32x32.png') }}" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="{{ l5_swagger_asset($documentation, 'favicon-16x16.png') }}" sizes="16x16"/>
     <style>
     html
     {
@@ -25,7 +25,7 @@
       background: #fafafa;
     }
     </style>
-    <?php if(config('l5-swagger.defaults.ui.display.dark_mode')): ?>
+    @if(config('l5-swagger.defaults.ui.display.dark_mode'))
         <style>
             body#dark-mode,
             #dark-mode .scheme-container {
@@ -113,34 +113,34 @@
                 color: #fafafa;
             }
         </style>
-    <?php endif; ?>
+    @endif
 </head>
 
-<body <?php if(config('l5-swagger.defaults.ui.display.dark_mode')): ?> id="dark-mode" <?php endif; ?>>
+<body @if(config('l5-swagger.defaults.ui.display.dark_mode')) id="dark-mode" @endif>
 <div id="swagger-ui"></div>
 
-<script src="<?php echo e(l5_swagger_asset($documentation, 'swagger-ui-bundle.js')); ?>"></script>
-<script src="<?php echo e(l5_swagger_asset($documentation, 'swagger-ui-standalone-preset.js')); ?>"></script>
+<script src="{{ l5_swagger_asset($documentation, 'swagger-ui-bundle.js') }}"></script>
+<script src="{{ l5_swagger_asset($documentation, 'swagger-ui-standalone-preset.js') }}"></script>
 <script>
     window.onload = function() {
         const urls = [];
 
-        <?php $__currentLoopData = $urlsToDocs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $title => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            urls.push({name: "<?php echo e($title); ?>", url: "<?php echo e($url); ?>"});
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        @foreach($urlsToDocs as $title => $url)
+            urls.push({name: "{{ $title }}", url: "{{ $url }}"});
+        @endforeach
 
         // Build a system
         const ui = SwaggerUIBundle({
             dom_id: '#swagger-ui',
             urls: urls,
-            "urls.primaryName": "<?php echo e($documentationTitle); ?>",
-            operationsSorter: <?php echo isset($operationsSorter) ? '"' . $operationsSorter . '"' : 'null'; ?>,
-            configUrl: <?php echo isset($configUrl) ? '"' . $configUrl . '"' : 'null'; ?>,
-            validatorUrl: <?php echo isset($validatorUrl) ? '"' . $validatorUrl . '"' : 'null'; ?>,
-            oauth2RedirectUrl: "<?php echo e(route('l5-swagger.'.$documentation.'.oauth2_callback', [], $useAbsolutePath)); ?>",
+            "urls.primaryName": "{{ $documentationTitle }}",
+            operationsSorter: {!! isset($operationsSorter) ? '"' . $operationsSorter . '"' : 'null' !!},
+            configUrl: {!! isset($configUrl) ? '"' . $configUrl . '"' : 'null' !!},
+            validatorUrl: {!! isset($validatorUrl) ? '"' . $validatorUrl . '"' : 'null' !!},
+            oauth2RedirectUrl: "{{ route('l5-swagger.'.$documentation.'.oauth2_callback', [], $useAbsolutePath) }}",
 
             requestInterceptor: function(request) {
-                request.headers['X-CSRF-TOKEN'] = '<?php echo e(csrf_token()); ?>';
+                request.headers['X-CSRF-TOKEN'] = '{{ csrf_token() }}';
                 return request;
             },
 
@@ -154,22 +154,21 @@
             ],
 
             layout: "StandaloneLayout",
-            docExpansion : "<?php echo config('l5-swagger.defaults.ui.display.doc_expansion', 'none'); ?>",
+            docExpansion : "{!! config('l5-swagger.defaults.ui.display.doc_expansion', 'none') !!}",
             deepLinking: true,
-            filter: <?php echo config('l5-swagger.defaults.ui.display.filter') ? 'true' : 'false'; ?>,
-            persistAuthorization: "<?php echo config('l5-swagger.defaults.ui.authorization.persist_authorization') ? 'true' : 'false'; ?>",
+            filter: {!! config('l5-swagger.defaults.ui.display.filter') ? 'true' : 'false' !!},
+            persistAuthorization: "{!! config('l5-swagger.defaults.ui.authorization.persist_authorization') ? 'true' : 'false' !!}",
 
         })
 
         window.ui = ui
 
-        <?php if(in_array('oauth2', array_column(config('l5-swagger.defaults.securityDefinitions.securitySchemes'), 'type'))): ?>
+        @if(in_array('oauth2', array_column(config('l5-swagger.defaults.securityDefinitions.securitySchemes'), 'type')))
         ui.initOAuth({
-            usePkceWithAuthorizationCodeGrant: "<?php echo (bool)config('l5-swagger.defaults.ui.authorization.oauth2.use_pkce_with_authorization_code_grant'); ?>"
+            usePkceWithAuthorizationCodeGrant: "{!! (bool)config('l5-swagger.defaults.ui.authorization.oauth2.use_pkce_with_authorization_code_grant') !!}"
         })
-        <?php endif; ?>
+        @endif
     }
 </script>
 </body>
 </html>
-<?php /**PATH C:\Users\can\Desktop\vsm_api\vendor\darkaonline\l5-swagger\src/../resources/views/index.blade.php ENDPATH**/ ?>

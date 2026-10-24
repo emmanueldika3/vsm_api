@@ -1,9 +1,9 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EventPresence extends Model
 {
@@ -17,13 +17,14 @@ class EventPresence extends Model
         'status',
     ];
 
-    public function event()
+    public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class);
+        // On précise explicitement la clé étrangère et la clé locale au cas où
+        return $this->belongsTo(Event::class, 'event_id', 'id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 }

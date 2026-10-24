@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventPresence;
+use App\Models\User;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
@@ -583,7 +584,7 @@ class EventController extends Controller
                 'id' => $user?->id,
                 'name' => $user?->name ?? 'Membre inconnu',
                 'number' => $user?->jersey_number ?? '0',
-                'position' => $user?->preferred_position ?? 'DEF',
+                'position' => $user?->position ?? 'DEF',
                 'status' => $presence->status,
             ];
         });
@@ -657,7 +658,7 @@ class EventController extends Controller
                 'id' => $user?->id,
                 'name' => $user?->name ?? 'Membre inconnu',
                 'number' => $user?->jersey_number ?? '0',
-                'position' => $user?->preferred_position ?? 'DEF',
+                'position' => $user?->position ?? 'DEF',
                 'status' => $presence->status,
             ];
         });
@@ -687,7 +688,10 @@ class EventController extends Controller
 
         $presentCount = EventPresence::where('event_id', $event->id)->where('status', 'present')->count();
         $uncertainCount = EventPresence::where('event_id', $event->id)->where('status', 'uncertain')->count();
-        $absentCount = EventPresence::where('event_id', $event->id)->where('status', 'absent')->count();
+        
+        $totalUsers = User::count();
+        $explicitAbsentCount = EventPresence::where('event_id', $event->id)->where('status', 'absent')->count();
+        $absentCount = max($explicitAbsentCount, $totalUsers - ($presentCount + $uncertainCount));
 
         $data = $event->toArray();
         $data['user_presence'] = $userPresence;

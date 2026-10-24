@@ -114,13 +114,7 @@ class User extends Authenticatable
         return $this->role === 'coach';
     }
 
-    // ==========================================
-    // ACCESSORS ET FORMATAGE API
-    // ==========================================
-
-    /**
-     * Accessor pour obtenir l'URL absolue de la photo de profil
-     */
+   
     public function getPhotoUrlAttribute(): ?string
     {
         $photo = $this->attributes['photo_url'] ?? null;
@@ -150,4 +144,9 @@ class User extends Authenticatable
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
+
+    public function presences()
+{
+    return $this->hasMany(EventPresence::class, 'user_id');
+}
 }

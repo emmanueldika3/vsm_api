@@ -10,7 +10,8 @@ use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\FinanceController;
 use App\Http\Controllers\Api\Admin\DecaissementController;
-
+use App\Http\Controllers\Api\Coach\MatchTacticController;
+use App\Http\Controllers\Api\Coach\MemberAttendanceController;
 /*
 |--------------------------------------------------------------------------
 | Routes Publiques (Accessibles sans authentification)
@@ -18,18 +19,29 @@ use App\Http\Controllers\Api\Admin\DecaissementController;
 */
 
 Route::post('/login', [AuthController::class, 'login']);
-
+//routes a proteger
 // Événements publics
+Route::get('/users/pending', [UserController::class, 'pending']);
+Route::apiResource('users', UserController::class);
+
+Route::post('/coach/events/{eventId}/tactics/publish', [MatchTacticController::class, 'publish']);
+Route::get('/events/{eventId}/tactics', [MatchTacticController::class, 'show']);
 Route::get('/events/upcoming', [EventController::class, 'upcoming']);
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{id}', [EventController::class, 'show']);
 Route::get('/events/{id}/presences', [EventController::class, 'getEventPresences']);
 Route::get('/events/{id}/presents', [EventController::class, 'getPresentPlayers']);
+Route::get('/members/{id}/presences-history', [MemberAttendanceController::class, 'attendanceHistory']);
 
 // Annonces publiques
 Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
 Route::get('/announcements', [AnnouncementController::class, 'index']);
 Route::get('/announcements/{id}', [AnnouncementController::class, 'show']);
+
+//event create update delete
+//  Route::post('/events', [EventController::class, 'store']);
+//         Route::put('/events/{id}', [EventController::class, 'update']);
+//         Route::delete('/events/{id}', [EventController::class, 'destroy']);
 
 
 /*
@@ -90,15 +102,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM (`can:admin-access`) ---
-    Route::middleware('can:admin-access')->group(function () {
+    Route::middleware(['api','auth:sanctum',])->group(function () {
         // Gestion des utilisateurs / membres
-        Route::get('/users/pending', [UserController::class, 'pending']);
+        // Route::get('/users/pending', [UserController::class, 'pending']);
         Route::post('/users/{id}/approve', [UserController::class, 'approve']);
         Route::post('/users/{id}/reject', [UserController::class, 'reject']);
         Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
         Route::post('/users/{id}/suspend', [UserController::class, 'suspend']);
         Route::post('/users/{id}/activate', [UserController::class, 'activate']);
-        Route::apiResource('users', UserController::class);
+        // Route::apiResource('users', UserController::class);
 
         // Gestion globale des cotisations (Trésorier/Admin)
         Route::get('/contributions', [ContributionController::class, 'index']);
@@ -112,6 +124,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/events', [EventController::class, 'store']);
         Route::put('/events/{id}', [EventController::class, 'update']);
         Route::delete('/events/{id}', [EventController::class, 'destroy']);
+
+        // coach
+        // Route::post('/coach/events/{eventId}/tactics/publish', [MatchTacticController::class, 'publish']);
 
         // Annonces (Création/Modification/Suppression)
         Route::apiResource('announcements', AnnouncementController::class)->except(['index', 'show']);
