@@ -67,8 +67,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // --- GESTION DES PRÉSENCES & ÉVÉNEMENTS (Membres / Coach) ---
-    Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
-    Route::post('/events/{id}/presences/{userId}', [EventController::class, 'updateMemberPresence']);
+    // Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
+    // Route::post('/events/{id}/presences/{userId}', [EventController::class, 'updateMemberPresence']);
 
     // --- FINANCES & COTISATIONS (Membre connecté) ---
     Route::get('/contributions/my-status', [ContributionController::class, 'myStatus']);
@@ -124,6 +124,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/events', [EventController::class, 'store']);
         Route::put('/events/{id}', [EventController::class, 'update']);
         Route::delete('/events/{id}', [EventController::class, 'destroy']);
+
+        // presence a un evenement membre/coach
+        Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
+        Route::post('/events/{id}/presences/{userId}', [EventController::class, 'updateMemberPresence']);
 
         // coach
         // Route::post('/coach/events/{eventId}/tactics/publish', [MatchTacticController::class, 'publish']);

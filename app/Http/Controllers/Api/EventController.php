@@ -686,12 +686,10 @@ class EventController extends Controller
             }
         }
 
+        // Comptage strict basé uniquement sur les réponses enregistrées
         $presentCount = EventPresence::where('event_id', $event->id)->where('status', 'present')->count();
         $uncertainCount = EventPresence::where('event_id', $event->id)->where('status', 'uncertain')->count();
-        
-        $totalUsers = User::count();
-        $explicitAbsentCount = EventPresence::where('event_id', $event->id)->where('status', 'absent')->count();
-        $absentCount = max($explicitAbsentCount, $totalUsers - ($presentCount + $uncertainCount));
+        $absentCount = EventPresence::where('event_id', $event->id)->where('status', 'absent')->count();
 
         $data = $event->toArray();
         $data['user_presence'] = $userPresence;
