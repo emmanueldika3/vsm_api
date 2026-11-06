@@ -106,6 +106,148 @@
                 ]
             }
         },
+        "/api/admin/decaissements": {
+            "get": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Obtenir la liste de tous les décaissements",
+                "operationId": "6e0e41e12fa2409c8db192449ffb7e90",
+                "responses": {
+                    "200": {
+                        "description": "Liste des décaissements récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Achat de 10 ballons de match"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Achat chez le fournisseur officiel."
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 150000
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "approved"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-09-09T01:22:21Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Créer une nouvelle demande de décaissement",
+                "operationId": "3186baec999c9c54c0b372729346e723",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Achat de matériel de bureau"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Stylos et cahiers pour le secrétariat",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 25000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Dépense créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dépense enregistrée avec succès."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/admin/decaissements/pending": {
             "get": {
                 "tags": [
@@ -1588,9 +1730,17 @@
                                                                 "type": "integer",
                                                                 "example": 10000
                                                             },
-                                                            "payment_method": {
+                                                            "type": {
                                                                 "type": "string",
-                                                                "example": "orange_money"
+                                                                "example": "standard"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "paid"
+                                                            },
+                                                            "paid_at": {
+                                                                "type": "string",
+                                                                "example": "2026-08-01 10:30:00"
                                                             },
                                                             "created_at": {
                                                                 "type": "string",
@@ -1629,8 +1779,7 @@
                             "schema": {
                                 "required": [
                                     "user_id",
-                                    "amount",
-                                    "payment_method"
+                                    "amount"
                                 ],
                                 "properties": {
                                     "user_id": {
@@ -1641,13 +1790,17 @@
                                         "type": "number",
                                         "example": 10000
                                     },
-                                    "payment_method": {
+                                    "type": {
                                         "type": "string",
-                                        "example": "orange_money"
+                                        "example": "standard"
                                     },
-                                    "notes": {
+                                    "status": {
                                         "type": "string",
-                                        "example": "Cotisation de la saison"
+                                        "example": "paid"
+                                    },
+                                    "paid_at": {
+                                        "type": "string",
+                                        "example": "2026-08-01 10:30:00"
                                     }
                                 },
                                 "type": "object"
@@ -1661,6 +1814,107 @@
                     },
                     "422": {
                         "description": "Erreur de validation des données"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/contributions/{id}": {
+            "put": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Modifier un paiement de cotisation (Trésorier/Admin)",
+                "operationId": "b6f320a094c43d9be3bd64b2c73c36e7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la contribution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 12000
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "standard"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "paid"
+                                    },
+                                    "paid_at": {
+                                        "type": "string",
+                                        "example": "2026-08-01 10:30:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cotisation mise à jour avec succès"
+                    },
+                    "404": {
+                        "description": "Contribution introuvable"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Supprimer un paiement de cotisation (Trésorier/Admin)",
+                "operationId": "1684944604c836080fa77bf0cf6cf3b5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la contribution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cotisation supprimée avec succès"
+                    },
+                    "404": {
+                        "description": "Contribution introuvable"
                     }
                 },
                 "security": [

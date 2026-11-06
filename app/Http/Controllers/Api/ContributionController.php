@@ -60,7 +60,6 @@ class ContributionController extends Controller
         $totalExpected = $adhesionExpected + $annualExpected;
         $seasonName = $activeSeason ? $activeSeason->name : 'Saison en cours';
 
-        // Liaison avec la table contributions via user_id
         $totalPaid = Contribution::where('user_id', $user->id)->sum('amount');
 
         return response()->json([
@@ -198,7 +197,9 @@ class ContributionController extends Controller
                                             new OA\Property(property: "id", type: "integer", example: 1),
                                             new OA\Property(property: "user_name", type: "string", example: "Emmanuel Dika"),
                                             new OA\Property(property: "amount", type: "integer", example: 10000),
-                                            new OA\Property(property: "payment_method", type: "string", example: "orange_money"),
+                                            new OA\Property(property: "type", type: "string", example: "standard"),
+                                            new OA\Property(property: "status", type: "string", example: "paid"),
+                                            new OA\Property(property: "paid_at", type: "string", example: "2026-08-01 10:30:00"),
                                             new OA\Property(property: "created_at", type: "string", example: "2026-08-01 10:30:00")
                                         ]
                                     )
@@ -234,8 +235,9 @@ class ContributionController extends Controller
                 'id' => $item->id,
                 'user_name' => $item->user->name ?? 'Membre inconnu',
                 'amount' => (int) $item->amount,
-                'payment_method' => $item->payment_method ?? 'N/A',
-                'notes' => $item->notes ?? null,
+                'type' => $item->type ?? 'Standard',
+                'status' => $item->status ?? 'paid',
+                'paid_at' => $item->paid_at ? $item->paid_at->toDateTimeString() : null,
                 'created_at' => $item->created_at->toDateTimeString(),
             ];
         });
@@ -257,12 +259,13 @@ class ContributionController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["user_id", "amount", "payment_method"],
+                required: ["user_id", "amount"],
                 properties: [
                     new OA\Property(property: "user_id", type: "integer", example: 1),
                     new OA\Property(property: "amount", type: "number", example: 10000),
-                    new OA\Property(property: "payment_method", type: "string", example: "orange_money"),
-                    new OA\Property(property: "notes", type: "string", example: "Cotisation de la saison")
+                    new OA\Property(property: "type", type: "string", example: "standard"),
+                    new OA\Property(property: "status", type: "string", example: "paid"),
+                    new OA\Property(property: "paid_at", type: "string", example: "2026-08-01 10:30:00")
                 ]
             )
         ),
@@ -276,8 +279,9 @@ class ContributionController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
             'amount' => 'required|numeric|min:500',
-            'payment_method' => 'required|string',
-            'notes' => 'nullable|string',
+            'type' => 'nullable|string',
+            'status' => 'nullable|string',
+            'paid_at' => 'nullable|date',
         ]);
 
         $contribution = Contribution::create($validated);
@@ -287,5 +291,103 @@ class ContributionController extends Controller
             'message' => 'Paiement de cotisation enregistré avec succès.',
             'data' => $contribution
         ], 201);
+    }
+
+    #[OA\Put(
+        path: "/contributions/{id}",
+        summary: "Modifier un paiement de cotisation (Trésorier/Admin)",
+        security: [["bearerAuth" => []]],
+        tags: ["Trésorerie"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID de la contribution",
+                schema: new OA\Schema(type: "integer", example: 1)
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "user_id", type: "integer", example: 1),
+                    new OA\Property(property: "amount", type: "number", example: 12000),
+                    new OA\Property(property: "type", type: "string", example: "standard"),
+                    new OA\Property(property: "status", type: "string", example: "paid"),
+                    new OA\Property(property: "paid_at", type: "string", example: "2026-08-01 10:30:00")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Cotisation mise à jour avec succès"),
+            new OA\Response(response: 404, description: "Contribution introuvable"),
+            new OA\Response(response: 422, description: "Erreur de validation")
+        ]
+    )]
+    public function update(Request $request, $id)
+    {
+        $contribution = Contribution::find($id);
+
+        if (!$contribution) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Contribution introuvable.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'user_id' => 'sometimes|integer|exists:users,id',
+            'amount' => 'sometimes|numeric|min:500',
+            'type' => 'nullable|string',
+            'status' => 'nullable|string',
+            'paid_at' => 'nullable|date',
+        ]);
+
+        $contribution->update($validated);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Contribution mise à jour avec succès.',
+            'data' => $contribution
+        ], 200);
+    }
+
+    #[OA\Delete(
+        path: "/contributions/{id}",
+        summary: "Supprimer un paiement de cotisation (Trésorier/Admin)",
+        security: [["bearerAuth" => []]],
+        tags: ["Trésorerie"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID de la contribution",
+                schema: new OA\Schema(type: "integer", example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Cotisation supprimée avec succès"),
+            new OA\Response(response: 404, description: "Contribution introuvable")
+        ]
+    )]
+    public function destroy($id)
+    {
+        $contribution = Contribution::find($id);
+
+        if (!$contribution) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Contribution introuvable.'
+            ], 404);
+        }
+
+        $contribution->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Contribution supprimée avec succès.'
+        ], 200);
     }
 }

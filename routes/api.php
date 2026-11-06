@@ -87,12 +87,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/collected-contributions', [FinanceController::class, 'getCollectedContributions']);
         });
 
-        // Décaissements
+     // Décaissements
         Route::prefix('decaissements')->group(function () {
+            Route::get('/', [DecaissementController::class, 'index']); // Liste tous les décaissements
+            Route::post('/', [DecaissementController::class, 'store']); // <--- AJOUTE CETTE LIGNE (C'est elle qui manquait pour le POST /api/admin/decaissements)
             Route::get('/pending', [DecaissementController::class, 'getPendingDisbursements']);
+            Route::put('/{id}', [DecaissementController::class, 'update']); 
+            Route::delete('/{id}', [DecaissementController::class, 'destroy']);
             Route::get('/metrics/pending', [DecaissementController::class, 'getPendingMetrics']);
             Route::get('/metrics/executed', [DecaissementController::class, 'getExecutedMetrics']);
             Route::post('/{id}/ordonner', [DecaissementController::class, 'processOrdonnancement']);
+            
         });
     });
 
@@ -112,13 +117,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/users/{id}/activate', [UserController::class, 'activate']);
         // Route::apiResource('users', UserController::class);
 
-        // Gestion globale des cotisations (Trésorier/Admin)
-        Route::get('/contributions', [ContributionController::class, 'index']);
-        Route::post('/contributions', [ContributionController::class, 'store']);
-        Route::put('/contributions/{id}', [ContributionController::class, 'update']);
-        Route::get('/contributions/members-status', [ContributionController::class, 'membersStatus']);
-        Route::get('/contributions/metrics', [ContributionController::class, 'metrics']);
-        Route::get('/contributions/member-financial-summary/{user}', [ContributionController::class, 'memberFinancialSummary']);
+        Route::middleware(['api', 'auth:sanctum'])->group(function () {
+
+    // Routes spécifiques (doivent rester AVANT /contributions/{id})
+    Route::get('/contributions/members-status', [ContributionController::class, 'membersStatus']);
+    Route::get('/contributions/metrics', [ContributionController::class, 'metrics']);
+    Route::get('/contributions/member-financial-summary/{user}', [ContributionController::class, 'memberFinancialSummary']);
+
+    // Gestion globale des cotisations (Trésorier/Admin)
+    Route::get('/contributions', [ContributionController::class, 'index']);
+    Route::post('/contributions', [ContributionController::class, 'store']);
+    Route::put('/contributions/{id}', [ContributionController::class, 'update']);
+    Route::delete('/contributions/{id}', [ContributionController::class, 'destroy']); // Ajouté pour la suppression
+
+});
 
         // Gestion des événements (Création, Modification, Suppression)
         Route::post('/events', [EventController::class, 'store']);

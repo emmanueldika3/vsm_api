@@ -14,10 +14,9 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('amount', 15, 2);
             // Workflow complet : Demande -> Ordre approuvé -> Décaissement exécuté / Rejeté
-            $table->enum('status', ['pending', 'approved', 'executed', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'executed', 'rejected'])->default('pending');
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('executed_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamp('approved_at')->nullable();
             $table->timestamp('executed_at')->nullable();
             $table->timestamps();
         });

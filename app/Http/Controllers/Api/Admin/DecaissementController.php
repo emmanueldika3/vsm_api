@@ -15,14 +15,14 @@ use OpenApi\Attributes as OA;
 class DecaissementController extends Controller
 {
     #[OA\Get(
-        path: "/api/admin/decaissements/pending",
-        summary: "Obtenir la liste des décaissements en attente",
+        path: "/api/admin/decaissements",
+        summary: "Obtenir la liste de tous les décaissements",
         tags: ["Décaissements"],
         security: [["sanctum" => []]],
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Liste des décaissements en attente récupérée avec succès",
+                description: "Liste des décaissements récupérée avec succès",
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: "status", type: "string", example: "success"),
@@ -46,6 +46,74 @@ class DecaissementController extends Controller
             new OA\Response(response: 401, description: "Non authentifié")
         ]
     )]
+    public function index(Request $request): JsonResponse
+    {
+        $query = Expense::query();
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $expenses = $query->latest()->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $expenses
+        ], 200);
+    }
+
+    #[OA\Post(
+        path: "/api/admin/decaissements",
+        summary: "Créer une nouvelle demande de décaissement (Trésorier)",
+        tags: ["Décaissements"],
+        security: [["sanctum" => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["title", "amount"],
+                properties: [
+                    new OA\Property(property: "title", type: "string", example: "Achat de matériel"),
+                    new OA\Property(property: "description", type: "string", example: "Détails de la dépense"),
+                    new OA\Property(property: "amount", type: "number", format: "float", example: 25000.00)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Demande créée avec succès"),
+            new OA\Response(response: 422, description: "Erreur de validation")
+        ]
+    )]
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $expense = Expense::create([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'amount' => $validated['amount'],
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Demande de décaissement créée et transmise avec succès.',
+            'data' => $expense
+        ], 201);
+    }
+
+    #[OA\Get(
+        path: "/api/admin/decaissements/pending",
+        summary: "Obtenir la liste des décaissements en attente",
+        tags: ["Décaissements"],
+        security: [["sanctum" => []]],
+        responses: [
+            new OA\Response(response: 200, description: "Succès")
+        ]
+    )]
     public function getPendingDisbursements(): JsonResponse
     {
         $expenses = Expense::where('status', 'pending')->get();
@@ -62,24 +130,7 @@ class DecaissementController extends Controller
         tags: ["Décaissements"],
         security: [["sanctum" => []]],
         responses: [
-            new OA\Response(
-                response: 200,
-                description: "Métriques des décaissements en attente récupérées avec succès",
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: "status", type: "string", example: "success"),
-                        new OA\Property(
-                            property: "data",
-                            type: "object",
-                            properties: [
-                                new OA\Property(property: "count", type: "integer", example: 1),
-                                new OA\Property(property: "total_amount", type: "number", format: "float", example: 50000.00)
-                            ]
-                        )
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, description: "Non authentifié")
+            new OA\Response(response: 200, description: "Succès")
         ]
     )]
     public function getPendingMetrics(): JsonResponse
@@ -97,33 +148,16 @@ class DecaissementController extends Controller
 
     #[OA\Get(
         path: "/api/admin/decaissements/metrics/executed",
-        summary: "Statistiques des décaissements ordonnés / exécutés",
+        summary: "Statistiques des décaissements exécutés",
         tags: ["Décaissements"],
         security: [["sanctum" => []]],
         responses: [
-            new OA\Response(
-                response: 200,
-                description: "Métriques des décaissements exécutés et ordonnés récupérées avec succès",
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: "status", type: "string", example: "success"),
-                        new OA\Property(
-                            property: "data",
-                            type: "object",
-                            properties: [
-                                new OA\Property(property: "count", type: "integer", example: 3),
-                                new OA\Property(property: "total_amount", type: "number", format: "float", example: 390000.00)
-                            ]
-                        )
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, description: "Non authentifié")
+            new OA\Response(response: 200, description: "Succès")
         ]
     )]
     public function getExecutedMetrics(): JsonResponse
     {
-        $query = Expense::whereIn('status', ['approved', 'executed']);
+        $query = Expense::where('status', 'executed');
 
         return response()->json([
             'status' => 'success',
@@ -136,8 +170,8 @@ class DecaissementController extends Controller
 
     #[OA\Post(
         path: "/api/admin/decaissements/{id}/ordonner",
-        summary: "Ordonner un décaissement (Approuver ou Rejeter)",
-        description: "Met à jour le statut en 'approved' ou 'rejected', enregistre l'utilisateur ordonnateur et met à jour les dates.",
+        summary: "Ordonner un décaissement (Exécuter ou Rejeter)",
+        description: "Met à jour le statut en 'executed' ou 'rejected', enregistre l'utilisateur et les dates.",
         tags: ["Décaissements"],
         security: [["sanctum" => []]],
         parameters: [
@@ -157,8 +191,8 @@ class DecaissementController extends Controller
                     new OA\Property(
                         property: "status", 
                         type: "string", 
-                        enum: ["approved", "rejected"], 
-                        example: "approved"
+                        enum: ["executed", "rejected"], 
+                        example: "executed"
                     ),
                     new OA\Property(
                         property: "rejection_reason", 
@@ -170,78 +204,113 @@ class DecaissementController extends Controller
             )
         ),
         responses: [
-            new OA\Response(
-                response: 200, 
-                description: "Statut mis à jour avec succès en BDD",
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: "status", type: "string", example: "success"),
-                        new OA\Property(property: "message", type: "string", example: "Décaissement approuvé avec succès."),
-                        new OA\Property(
-                            property: "data",
-                            type: "object",
-                            properties: [
-                                new OA\Property(property: "id", type: "integer", example: 1),
-                                new OA\Property(property: "status", type: "string", example: "approved"),
-                                new OA\Property(property: "approved_by", type: "integer", example: 1),
-                                new OA\Property(property: "approved_at", type: "string", format: "date-time", example: "2026-09-15T13:08:17Z")
-                            ]
-                        )
-                    ]
-                )
-            ),
-            new OA\Response(
-                response: 422, 
-                description: "Erreur de validation ou demande déjà traitée",
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: "status", type: "string", example: "error"),
-                        new OA\Property(property: "message", type: "string", example: "Cette demande a déjà été traitée.")
-                    ]
-                )
-            ),
-            new OA\Response(response: 401, description: "Non authentifié"),
+            new OA\Response(response: 200, description: "Statut mis à jour avec succès"),
+            new OA\Response(response: 422, description: "Erreur de validation ou déjà traité"),
             new OA\Response(response: 404, description: "Dépense introuvable")
         ]
     )]
-    public function processOrdonnancement(Request $request, $id): JsonResponse
+   public function processOrdonnancement(Request $request, $id): JsonResponse
     {
         $request->validate([
-            'status' => 'required|in:approved,rejected',
+            // On autorise 'approved' en plus de 'executed' et 'rejected'
+            'status' => 'required|in:executed,approved,rejected',
             'rejection_reason' => 'required_if:status,rejected|nullable|string|max:255',
         ]);
 
         $expense = Expense::findOrFail($id);
 
-        if ($expense->status !== 'pending') {
+        if (!in_array($expense->status, ['pending', 'rejected'])) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Cette demande a déjà été traitée.'
+                'message' => 'Cette demande ne peut plus être traitée.'
             ], 422);
         }
 
-        // Mise à jour du statut selon le choix ("approved" ou "rejected")
-        $expense->status = $request->status;
+        // Si l'application envoie 'approved', on l'enregistre comme 'executed' en base
+        $inputStatus = $request->status;
+        $dbStatus = ($inputStatus === 'approved') ? 'executed' : $inputStatus;
 
-        if ($request->status === 'approved') {
-            $expense->approved_by = $request->user()->id;
-            $expense->approved_at = now();
+        $expense->status = $dbStatus;
+
+        if ($dbStatus === 'executed') {
+            $expense->executed_by = $request->user()?->id;
+            $expense->executed_at = now();
             $expense->rejection_reason = null;
         } else {
             $expense->rejection_reason = $request->rejection_reason;
-            $expense->approved_by = null;
-            $expense->approved_at = null;
+            $expense->executed_by = null;
+            $expense->executed_at = null;
         }
 
-        // Enregistrement effectif en base de données
         $expense->save();
 
         return response()->json([
             'status' => 'success',
-            'message' => $request->status === 'approved' 
-                ? 'Décaissement approuvé avec succès.' 
+            'message' => $dbStatus === 'executed' 
+                ? 'Décaissement exécuté avec succès.' 
                 : 'Demande de décaissement rejetée avec succès.',
             'data' => $expense
+        ], 200);
+    }
+
+    #[OA\Put(
+        path: "/api/admin/decaissements/{id}",
+        summary: "Modifier une demande de décaissement (Uniquement si 'pending')",
+        tags: ["Décaissements"],
+        security: [["sanctum" => []]]
+    )]
+    public function update(Request $request, $id): JsonResponse
+    {
+        $expense = Expense::findOrFail($id);
+
+        if ($expense->status !== 'pending') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Impossible de modifier une dépense déjà traitée ou exécutée.'
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $expense->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'amount' => $validated['amount'],
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Demande de décaissement mise à jour avec succès.',
+            'data' => $expense
+        ], 200);
+    }
+
+    #[OA\Delete(
+        path: "/api/admin/decaissements/{id}",
+        summary: "Supprimer une demande de décaissement (Uniquement si 'pending')",
+        tags: ["Décaissements"],
+        security: [["sanctum" => []]]
+    )]
+    public function destroy($id): JsonResponse
+    {
+        $expense = Expense::findOrFail($id);
+
+        if ($expense->status !== 'pending') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Impossible de supprimer une dépense déjà traitée ou exécutée.'
+            ], 422);
+        }
+
+        $expense->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Demande de décaissement supprimée avec succès.'
         ], 200);
     }
 }
