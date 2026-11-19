@@ -111,7 +111,8 @@ class DecaissementController extends Controller
         tags: ["Décaissements"],
         security: [["sanctum" => []]],
         responses: [
-            new OA\Response(response: 200, description: "Succès")
+            new OA\Response(response: 200, description: "Succès"),
+            new OA\Response(response: 401, description: "Non authentifié")
         ]
     )]
     public function getPendingDisbursements(): JsonResponse
@@ -130,7 +131,8 @@ class DecaissementController extends Controller
         tags: ["Décaissements"],
         security: [["sanctum" => []]],
         responses: [
-            new OA\Response(response: 200, description: "Succès")
+            new OA\Response(response: 200, description: "Succès"),
+            new OA\Response(response: 401, description: "Non authentifié")
         ]
     )]
     public function getPendingMetrics(): JsonResponse
@@ -152,7 +154,8 @@ class DecaissementController extends Controller
         tags: ["Décaissements"],
         security: [["sanctum" => []]],
         responses: [
-            new OA\Response(response: 200, description: "Succès")
+            new OA\Response(response: 200, description: "Succès"),
+            new OA\Response(response: 401, description: "Non authentifié")
         ]
     )]
     public function getExecutedMetrics(): JsonResponse
@@ -191,7 +194,7 @@ class DecaissementController extends Controller
                     new OA\Property(
                         property: "status", 
                         type: "string", 
-                        enum: ["executed", "rejected"], 
+                        enum: ["executed", "approved", "rejected"], 
                         example: "executed"
                     ),
                     new OA\Property(
@@ -209,10 +212,9 @@ class DecaissementController extends Controller
             new OA\Response(response: 404, description: "Dépense introuvable")
         ]
     )]
-   public function processOrdonnancement(Request $request, $id): JsonResponse
+    public function processOrdonnancement(Request $request, $id): JsonResponse
     {
         $request->validate([
-            // On autorise 'approved' en plus de 'executed' et 'rejected'
             'status' => 'required|in:executed,approved,rejected',
             'rejection_reason' => 'required_if:status,rejected|nullable|string|max:255',
         ]);
@@ -226,7 +228,6 @@ class DecaissementController extends Controller
             ], 422);
         }
 
-        // Si l'application envoie 'approved', on l'enregistre comme 'executed' en base
         $inputStatus = $request->status;
         $dbStatus = ($inputStatus === 'approved') ? 'executed' : $inputStatus;
 
@@ -257,7 +258,32 @@ class DecaissementController extends Controller
         path: "/api/admin/decaissements/{id}",
         summary: "Modifier une demande de décaissement (Uniquement si 'pending')",
         tags: ["Décaissements"],
-        security: [["sanctum" => []]]
+        security: [["sanctum" => []]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID de la dépense à modifier",
+                schema: new OA\Schema(type: "integer", example: 1)
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["title", "amount"],
+                properties: [
+                    new OA\Property(property: "title", type: "string", example: "Nouveau titre"),
+                    new OA\Property(property: "description", type: "string", example: "Nouvelle description"),
+                    new OA\Property(property: "amount", type: "number", format: "float", example: 30000.00)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Mise à jour réussie"),
+            new OA\Response(response: 422, description: "Impossible de modifier ou erreur de validation"),
+            new OA\Response(response: 404, description: "Introuvable")
+        ]
     )]
     public function update(Request $request, $id): JsonResponse
     {
@@ -293,7 +319,21 @@ class DecaissementController extends Controller
         path: "/api/admin/decaissements/{id}",
         summary: "Supprimer une demande de décaissement (Uniquement si 'pending')",
         tags: ["Décaissements"],
-        security: [["sanctum" => []]]
+        security: [["sanctum" => []]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "ID de la dépense à supprimer",
+                schema: new OA\Schema(type: "integer", example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Suppression réussie"),
+            new OA\Response(response: 422, description: "Impossible de supprimer"),
+            new OA\Response(response: 404, description: "Introuvable")
+        ]
     )]
     public function destroy($id): JsonResponse
     {

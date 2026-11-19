@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\Admin\FinanceController;
 use App\Http\Controllers\Api\Admin\DecaissementController;
 use App\Http\Controllers\Api\Coach\MatchTacticController;
 use App\Http\Controllers\Api\Coach\MemberAttendanceController;
+use App\Http\Controllers\treasury\TreasuryController;
+use App\Http\Controllers\Api\MatchController;
 /*
 |--------------------------------------------------------------------------
 | Routes Publiques (Accessibles sans authentification)
@@ -38,11 +40,6 @@ Route::get('/announcements/latest', [AnnouncementController::class, 'latest']);
 Route::get('/announcements', [AnnouncementController::class, 'index']);
 Route::get('/announcements/{id}', [AnnouncementController::class, 'show']);
 
-//event create update delete
-//  Route::post('/events', [EventController::class, 'store']);
-//         Route::put('/events/{id}', [EventController::class, 'update']);
-//         Route::delete('/events/{id}', [EventController::class, 'destroy']);
-
 
 /*
 |--------------------------------------------------------------------------
@@ -65,14 +62,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/president', [DashboardController::class, 'presidentSummary']);
         Route::get('/admin', [DashboardController::class, 'adminSummary']);
     });
+    
+Route::get('/contributions/my-financial-summary', [TreasuryController::class, 'getMyFinancialSummary']);
 
-    // --- GESTION DES PRÉSENCES & ÉVÉNEMENTS (Membres / Coach) ---
-    // Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
-    // Route::post('/events/{id}/presences/{userId}', [EventController::class, 'updateMemberPresence']);
+
 
     // --- FINANCES & COTISATIONS (Membre connecté) ---
     Route::get('/contributions/my-status', [ContributionController::class, 'myStatus']);
-    Route::get('/contributions/my-financial-summary', [ContributionController::class, 'myFinancialSummary']);
+    // Route::get('/contributions/my-financial-summary', [ContributionController::class, 'myFinancialSummary']);
 
     // --- ESPACE ADMINISTRATION (`api/admin/*`) ---
     Route::prefix('admin')->group(function () {
@@ -117,18 +114,25 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/users/{id}/activate', [UserController::class, 'activate']);
         // Route::apiResource('users', UserController::class);
 
-        Route::middleware(['api', 'auth:sanctum'])->group(function () {
+   Route::middleware(['api', 'auth:sanctum'])->group(function () {
 
-    // Routes spécifiques (doivent rester AVANT /contributions/{id})
+    // --- Routes spécifiques (doivent impérativement rester AVANT /contributions/{id}) ---
+    Route::get('/contributions/my-status', [ContributionController::class, 'getMyStatus']);
+    // Route::get('/contributions/my-financial-summary', [ContributionController::class, 'getMyFinancialSummary']);
     Route::get('/contributions/members-status', [ContributionController::class, 'membersStatus']);
     Route::get('/contributions/metrics', [ContributionController::class, 'metrics']);
     Route::get('/contributions/member-financial-summary/{user}', [ContributionController::class, 'memberFinancialSummary']);
+    Route::get('/contributions/all-members-annual', [ContributionController::class, 'allMembersAnnualStatus']);
 
-    // Gestion globale des cotisations (Trésorier/Admin)
+    // --- Gestion globale des cotisations (Trésorier/Admin) ---
     Route::get('/contributions', [ContributionController::class, 'index']);
     Route::post('/contributions', [ContributionController::class, 'store']);
     Route::put('/contributions/{id}', [ContributionController::class, 'update']);
-    Route::delete('/contributions/{id}', [ContributionController::class, 'destroy']); // Ajouté pour la suppression
+    Route::delete('/contributions/{id}', [ContributionController::class, 'destroy']);
+
+    // --- Gestion des Matchs et Entraînements (VSM App) ---
+    Route::get('/matches/annual-summary', [MatchController::class, 'annualSummary']);
+    Route::post('/matches', [MatchController::class, 'store']); 
 
 });
 

@@ -12,6 +12,98 @@ use OpenApi\Attributes as OA;
 class ContributionController extends Controller
 {
     #[OA\Get(
+        path: "/contributions/all-members-annual",
+        summary: "Liste de tous les membres avec le statut de leur cotisation annuelle (Saison active)",
+        security: [["bearerAuth" => []]],
+        tags: ["Trésorerie"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Liste de tous les membres et leurs cotisations annuelles",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "status", type: "string", example: "success"),
+                        new OA\Property(property: "season", type: "string", example: "Saison 2026-2027"),
+                        new OA\Property(
+                            property: "data",
+                            type: "array",
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: "user_id", type: "integer", example: 1),
+                                    new OA\Property(property: "member_name", type: "string", example: "Emmanuel Dika"),
+                                    new OA\Property(
+                                        property: "annual_fee",
+                                        type: "object",
+                                        properties: [
+                                            new OA\Property(property: "expected", type: "number", example: 24000),
+                                            new OA\Property(property: "paid", type: "number", example: 12000),
+                                            new OA\Property(property: "remaining", type: "number", example: 12000),
+                                            new OA\Property(property: "status", type: "string", example: "Partiel"),
+                                            new OA\Property(property: "transactions", type: "array", items: new OA\Items(type: "object"))
+                                        ]
+                                    )
+                                ]
+                            )
+                        )
+                    ]
+                )
+            )
+        ]
+    )]
+    public function allMembersAnnualStatus()
+    {
+        $activeSeason = Season::where('is_active', true)->first();
+        $annualExpected = $activeSeason ? (float) $activeSeason->annual_fee : 24000;
+        $seasonName = $activeSeason ? $activeSeason->name : 'Saison en cours';
+
+        // Récupère tous les utilisateurs avec leurs contributions de la saison active
+        $users = User::with(['contributions' => function($query) use ($activeSeason) {
+            if ($activeSeason) {
+                $query->where('season_id', $activeSeason->id);
+            }
+        }])->get();
+
+        $data = $users->map(function($user) use ($annualExpected) {
+            // Filtrer strictement les contributions de type annuel
+            $annualContributions = $user->contributions->filter(function($c) {
+                $type = strtolower($c->type ?? '');
+                return str_contains($type, 'annual') || str_contains($type, 'annuelle');
+            });
+
+            $paid = (float) $annualContributions->sum('amount_paid');
+            $remaining = max(0, $annualExpected - $paid);
+            $isSold = $paid >= $annualExpected;
+
+            $formattedTransactions = $annualContributions->map(function($tx) {
+                return [
+                    'id' => $tx->id,
+                    'amount' => (int) $tx->amount_paid,
+                    'status' => $tx->status ?? 'paid',
+                    'created_at' => $tx->created_at ? $tx->created_at->toDateTimeString() : null,
+                ];
+            })->values();
+
+            return [
+                'user_id' => $user->id,
+                'member_name' => $user->name,
+                'annual_fee' => [
+                    'expected' => $annualExpected,
+                    'paid' => $paid,
+                    'remaining' => $remaining,
+                    'status' => $isSold ? 'Soldé' : 'Partiel',
+                    'transactions' => $formattedTransactions
+                ]
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'season' => $seasonName,
+            'data' => $data
+        ]);
+    }
+
+   #[OA\Get(
         path: "/contributions/my-financial-summary",
         summary: "Statut des cotisations du membre connecté (Dynamique selon la saison active)",
         security: [["bearerAuth" => []]],
@@ -49,18 +141,22 @@ class ContributionController extends Controller
             new OA\Response(response: 404, description: "Saison active introuvable")
         ]
     )]
-    public function myFinancialSummary(Request $request)
+    public function getMyFinancialSummary(Request $request)
     {
         $user = $request->user();
 
         $activeSeason = Season::where('is_active', true)->first();
         
-        $adhesionExpected = $activeSeason ? $activeSeason->adhesion_fee : 3000;
-        $annualExpected = $activeSeason ? $activeSeason->annual_fee : 24000;
+        $adhesionExpected = $activeSeason ? (float) $activeSeason->adhesion_fee : 3000;
+        $annualExpected = $activeSeason ? (float) $activeSeason->annual_fee : 24000;
         $totalExpected = $adhesionExpected + $annualExpected;
         $seasonName = $activeSeason ? $activeSeason->name : 'Saison en cours';
 
-        $totalPaid = Contribution::where('user_id', $user->id)->sum('amount');
+        $query = Contribution::where('user_id', $user->id);
+        if ($activeSeason) {
+            $query->where('season_id', $activeSeason->id);
+        }
+        $totalPaid = (float) $query->sum('amount_paid');
 
         return response()->json([
             'status' => 'success',
@@ -69,13 +165,21 @@ class ContributionController extends Controller
                 'member_name' => $user->name,
                 'global_status' => $totalPaid >= $totalExpected ? 'En Règle' : 'Incomplet',
                 'financial_summary' => [
-                    'expected' => (float) $totalExpected,
-                    'paid' => (float) $totalPaid,
+                    'expected' => $totalExpected,
+                    'paid' => $totalPaid,
                     'remaining' => max(0, $totalExpected - $totalPaid),
                     'status' => $totalPaid >= $totalExpected ? 'Solde Apuré' : 'Partiel / Dû'
                 ]
             ]
         ]);
+    }
+
+    /**
+     * Alias pour sécuriser la compatibilité avec l'autre nom de méthode
+     */
+    public function myFinancialSummary(Request $request)
+    {
+        return $this->getMyFinancialSummary($request);
     }
 
     #[OA\Get(
@@ -133,12 +237,16 @@ class ContributionController extends Controller
 
         $activeSeason = Season::where('is_active', true)->first();
         
-        $adhesionExpected = $activeSeason ? $activeSeason->adhesion_fee : 3000;
-        $annualExpected = $activeSeason ? $activeSeason->annual_fee : 24000;
+        $adhesionExpected = $activeSeason ? (float) $activeSeason->adhesion_fee : 3000;
+        $annualExpected = $activeSeason ? (float) $activeSeason->annual_fee : 24000;
         $totalExpected = $adhesionExpected + $annualExpected;
         $seasonName = $activeSeason ? $activeSeason->name : 'Saison en cours';
 
-        $totalPaid = Contribution::where('user_id', $user->id)->sum('amount');
+        $query = Contribution::where('user_id', $user->id);
+        if ($activeSeason) {
+            $query->where('season_id', $activeSeason->id);
+        }
+        $totalPaid = (float) $query->sum('amount_paid');
 
         return response()->json([
             'status' => 'success',
@@ -147,8 +255,8 @@ class ContributionController extends Controller
                 'member_name' => $user->name,
                 'global_status' => $totalPaid >= $totalExpected ? 'En Règle' : 'Incomplet',
                 'financial_summary' => [
-                    'expected' => (float) $totalExpected,
-                    'paid' => (float) $totalPaid,
+                    'expected' => $totalExpected,
+                    'paid' => $totalPaid,
                     'remaining' => max(0, $totalExpected - $totalPaid),
                     'status' => $totalPaid >= $totalExpected ? 'Solde Apuré' : 'Partiel / Dû'
                 ]
@@ -197,7 +305,7 @@ class ContributionController extends Controller
                                             new OA\Property(property: "id", type: "integer", example: 1),
                                             new OA\Property(property: "user_name", type: "string", example: "Emmanuel Dika"),
                                             new OA\Property(property: "amount", type: "integer", example: 10000),
-                                            new OA\Property(property: "type", type: "string", example: "standard"),
+                                            new OA\Property(property: "type", type: "string", example: "annual"),
                                             new OA\Property(property: "status", type: "string", example: "paid"),
                                             new OA\Property(property: "paid_at", type: "string", example: "2026-08-01 10:30:00"),
                                             new OA\Property(property: "created_at", type: "string", example: "2026-08-01 10:30:00")
@@ -228,16 +336,16 @@ class ContributionController extends Controller
         }
 
         $records = $query->latest()->get();
-        $totalAmount = $records->sum('amount');
+        $totalAmount = $records->sum('amount_paid');
 
         $formattedRecords = $records->map(function ($item) {
             return [
                 'id' => $item->id,
                 'user_name' => $item->user->name ?? 'Membre inconnu',
-                'amount' => (int) $item->amount,
-                'type' => $item->type ?? 'Standard',
+                'amount' => (int) $item->amount_paid,
+                'type' => $item->type ?? 'other',
                 'status' => $item->status ?? 'paid',
-                'paid_at' => $item->paid_at ? $item->paid_at->toDateTimeString() : null,
+                'paid_at' => $item->paid_at ? (is_string($item->paid_at) ? $item->paid_at : $item->paid_at->toDateTimeString()) : null,
                 'created_at' => $item->created_at->toDateTimeString(),
             ];
         });
@@ -259,11 +367,12 @@ class ContributionController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["user_id", "amount"],
+                required: ["user_id", "amount", "type"],
                 properties: [
                     new OA\Property(property: "user_id", type: "integer", example: 1),
                     new OA\Property(property: "amount", type: "number", example: 10000),
-                    new OA\Property(property: "type", type: "string", example: "standard"),
+                    new OA\Property(property: "type", type: "string", example: "annual"),
+                    new OA\Property(property: "title", type: "string", example: "Tranche 1"),
                     new OA\Property(property: "status", type: "string", example: "paid"),
                     new OA\Property(property: "paid_at", type: "string", example: "2026-08-01 10:30:00")
                 ]
@@ -276,15 +385,42 @@ class ContributionController extends Controller
     )]
     public function store(Request $request)
     {
+        $activeSeason = Season::where('is_active', true)->first();
+
+        if (!$activeSeason) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Impossible d\'enregistrer : aucune saison active trouvée.'
+            ], 400);
+        }
+
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
-            'amount' => 'required|numeric|min:500',
-            'type' => 'nullable|string',
-            'status' => 'nullable|string',
+            'amount'  => 'required|numeric|min:100',
+            'type'    => 'required|string|in:adhesion,renewal,annual,match,sanction,other',
+            'title'   => 'nullable|string|max:255',
+            'status'  => 'nullable|string',
             'paid_at' => 'nullable|date',
         ]);
 
-        $contribution = Contribution::create($validated);
+        $defaultTitle = match ($validated['type']) {
+            'adhesion' => "Frais d'adhésion",
+            'renewal' => "Frais de réinscription",
+            'annual' => "Cotisation annuelle",
+            'match' => "Caisse match",
+            'sanction' => "Amende / Sanction",
+            default => "Autre contribution",
+        };
+
+        $contribution = Contribution::create([
+            'user_id'     => $validated['user_id'],
+            'season_id'   => $activeSeason->id,
+            'amount_paid' => $validated['amount'],
+            'type'        => $validated['type'],
+            'title'       => !empty($validated['title']) ? $validated['title'] : $defaultTitle,
+            'status'      => $validated['status'] ?? 'paid',
+            'paid_at'     => $validated['paid_at'] ?? now(),
+        ]);
 
         return response()->json([
             'status' => 'success',
@@ -313,7 +449,8 @@ class ContributionController extends Controller
                 properties: [
                     new OA\Property(property: "user_id", type: "integer", example: 1),
                     new OA\Property(property: "amount", type: "number", example: 12000),
-                    new OA\Property(property: "type", type: "string", example: "standard"),
+                    new OA\Property(property: "type", type: "string", example: "annual"),
+                    new OA\Property(property: "title", type: "string", example: "Tranche 1"),
                     new OA\Property(property: "status", type: "string", example: "paid"),
                     new OA\Property(property: "paid_at", type: "string", example: "2026-08-01 10:30:00")
                 ]
@@ -338,13 +475,22 @@ class ContributionController extends Controller
 
         $validated = $request->validate([
             'user_id' => 'sometimes|integer|exists:users,id',
-            'amount' => 'sometimes|numeric|min:500',
-            'type' => 'nullable|string',
-            'status' => 'nullable|string',
+            'amount'  => 'sometimes|numeric|min:100',
+            'type'    => 'sometimes|string|in:adhesion,renewal,annual,match,sanction,other',
+            'title'   => 'nullable|string|max:255',
+            'status'  => 'nullable|string',
             'paid_at' => 'nullable|date',
         ]);
 
-        $contribution->update($validated);
+        $dataToUpdate = [];
+        if (isset($validated['user_id'])) $dataToUpdate['user_id'] = $validated['user_id'];
+        if (isset($validated['amount'])) $dataToUpdate['amount_paid'] = $validated['amount'];
+        if (isset($validated['type'])) $dataToUpdate['type'] = $validated['type'];
+        if (array_key_exists('title', $validated)) $dataToUpdate['title'] = $validated['title'];
+        if (isset($validated['status'])) $dataToUpdate['status'] = $validated['status'];
+        if (isset($validated['paid_at'])) $dataToUpdate['paid_at'] = $validated['paid_at'];
+
+        $contribution->update($dataToUpdate);
 
         return response()->json([
             'status' => 'success',

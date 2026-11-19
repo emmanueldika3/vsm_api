@@ -147,7 +147,7 @@
                                                     },
                                                     "status": {
                                                         "type": "string",
-                                                        "example": "approved"
+                                                        "example": "pending"
                                                     },
                                                     "created_at": {
                                                         "type": "string",
@@ -178,7 +178,7 @@
                 "tags": [
                     "Décaissements"
                 ],
-                "summary": "Créer une nouvelle demande de décaissement",
+                "summary": "Créer une nouvelle demande de décaissement (Trésorier)",
                 "operationId": "3186baec999c9c54c0b372729346e723",
                 "requestBody": {
                     "required": true,
@@ -192,12 +192,11 @@
                                 "properties": {
                                     "title": {
                                         "type": "string",
-                                        "example": "Achat de matériel de bureau"
+                                        "example": "Achat de matériel"
                                     },
                                     "description": {
                                         "type": "string",
-                                        "example": "Stylos et cahiers pour le secrétariat",
-                                        "nullable": true
+                                        "example": "Détails de la dépense"
                                     },
                                     "amount": {
                                         "type": "number",
@@ -212,33 +211,10 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Dépense créée avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Dépense enregistrée avec succès."
-                                        },
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Demande créée avec succès"
                     },
                     "422": {
                         "description": "Erreur de validation"
-                    },
-                    "401": {
-                        "description": "Non authentifié"
                     }
                 },
                 "security": [
@@ -257,54 +233,7 @@
                 "operationId": "19bcd50dce1bab449a36fcb2c13fca16",
                 "responses": {
                     "200": {
-                        "description": "Liste des décaissements en attente récupérée avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "title": {
-                                                        "type": "string",
-                                                        "example": "Achat de 10 ballons de match"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "Achat chez le fournisseur officiel."
-                                                    },
-                                                    "amount": {
-                                                        "type": "number",
-                                                        "format": "float",
-                                                        "example": 150000
-                                                    },
-                                                    "status": {
-                                                        "type": "string",
-                                                        "example": "pending"
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2026-09-09T01:22:21Z"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Succès"
                     },
                     "401": {
                         "description": "Non authentifié"
@@ -326,34 +255,7 @@
                 "operationId": "73a5810e70048682eca1cacaad7488cf",
                 "responses": {
                     "200": {
-                        "description": "Métriques des décaissements en attente récupérées avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "count": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "total_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 50000
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Succès"
                     },
                     "401": {
                         "description": "Non authentifié"
@@ -371,38 +273,11 @@
                 "tags": [
                     "Décaissements"
                 ],
-                "summary": "Statistiques des décaissements ordonnés / exécutés",
+                "summary": "Statistiques des décaissements exécutés",
                 "operationId": "c856cd94f496f6aaa87e87f6f3f221a9",
                 "responses": {
                     "200": {
-                        "description": "Métriques des décaissements exécutés et ordonnés récupérées avec succès",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "count": {
-                                                    "type": "integer",
-                                                    "example": 3
-                                                },
-                                                "total_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 390000
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Succès"
                     },
                     "401": {
                         "description": "Non authentifié"
@@ -420,8 +295,8 @@
                 "tags": [
                     "Décaissements"
                 ],
-                "summary": "Ordonner un décaissement (Approuver ou Rejeter)",
-                "description": "Met à jour le statut en 'approved' ou 'rejected', enregistre l'utilisateur ordonnateur et met à jour les dates.",
+                "summary": "Ordonner un décaissement (Exécuter ou Rejeter)",
+                "description": "Met à jour le statut en 'executed' ou 'rejected', enregistre l'utilisateur et les dates.",
                 "operationId": "13e42d5cb1cc9e6e8d71f3722749affa",
                 "parameters": [
                     {
@@ -446,8 +321,9 @@
                                 "properties": {
                                     "status": {
                                         "type": "string",
-                                        "example": "approved",
+                                        "example": "executed",
                                         "enum": [
+                                            "executed",
                                             "approved",
                                             "rejected"
                                         ]
@@ -465,72 +341,114 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Statut mis à jour avec succès en BDD",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Décaissement approuvé avec succès."
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "approved"
-                                                },
-                                                "approved_by": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "approved_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2026-09-15T13:08:17Z"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Statut mis à jour avec succès"
                     },
                     "422": {
-                        "description": "Erreur de validation ou demande déjà traitée",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Cette demande a déjà été traitée."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Non authentifié"
+                        "description": "Erreur de validation ou déjà traité"
                     },
                     "404": {
                         "description": "Dépense introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/decaissements/{id}": {
+            "put": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Modifier une demande de décaissement (Uniquement si 'pending')",
+                "operationId": "b9221ec56b16133d5a9324a637fdd45c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la dépense à modifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Nouveau titre"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Nouvelle description"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 30000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour réussie"
+                    },
+                    "422": {
+                        "description": "Impossible de modifier ou erreur de validation"
+                    },
+                    "404": {
+                        "description": "Introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Décaissements"
+                ],
+                "summary": "Supprimer une demande de décaissement (Uniquement si 'pending')",
+                "operationId": "acfe19ec24269b40c5a880aba270e09a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la dépense à supprimer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Suppression réussie"
+                    },
+                    "422": {
+                        "description": "Impossible de supprimer"
+                    },
+                    "404": {
+                        "description": "Introuvable"
                     }
                 },
                 "security": [
@@ -1507,13 +1425,92 @@
                 ]
             }
         },
+        "/contributions/all-members-annual": {
+            "get": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Liste de tous les membres avec le statut de leur cotisation annuelle (Saison active)",
+                "operationId": "46ffffd1236a0c4693aa3f4f049ee705",
+                "responses": {
+                    "200": {
+                        "description": "Liste de tous les membres et leurs cotisations annuelles",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "season": {
+                                            "type": "string",
+                                            "example": "Saison 2026-2027"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "member_name": {
+                                                        "type": "string",
+                                                        "example": "Emmanuel Dika"
+                                                    },
+                                                    "annual_fee": {
+                                                        "properties": {
+                                                            "expected": {
+                                                                "type": "number",
+                                                                "example": 24000
+                                                            },
+                                                            "paid": {
+                                                                "type": "number",
+                                                                "example": 12000
+                                                            },
+                                                            "remaining": {
+                                                                "type": "number",
+                                                                "example": 12000
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Partiel"
+                                                            },
+                                                            "transactions": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/contributions/my-financial-summary": {
             "get": {
                 "tags": [
                     "Trésorerie"
                 ],
                 "summary": "Statut des cotisations du membre connecté (Dynamique selon la saison active)",
-                "operationId": "eedcb9b7139da6731d7309b9666972c9",
+                "operationId": "64f10f19e7afa6e86ef677cac407d07e",
                 "responses": {
                     "200": {
                         "description": "Résumé financier détaillé du membre connecté",
@@ -1732,7 +1729,7 @@
                                                             },
                                                             "type": {
                                                                 "type": "string",
-                                                                "example": "standard"
+                                                                "example": "annual"
                                                             },
                                                             "status": {
                                                                 "type": "string",
@@ -1779,7 +1776,8 @@
                             "schema": {
                                 "required": [
                                     "user_id",
-                                    "amount"
+                                    "amount",
+                                    "type"
                                 ],
                                 "properties": {
                                     "user_id": {
@@ -1792,7 +1790,11 @@
                                     },
                                     "type": {
                                         "type": "string",
-                                        "example": "standard"
+                                        "example": "annual"
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Tranche 1"
                                     },
                                     "status": {
                                         "type": "string",
@@ -1858,7 +1860,11 @@
                                     },
                                     "type": {
                                         "type": "string",
-                                        "example": "standard"
+                                        "example": "annual"
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Tranche 1"
                                     },
                                     "status": {
                                         "type": "string",
@@ -2876,6 +2882,69 @@
                     },
                     "404": {
                         "description": "Événement introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/matches/annual-summary": {
+            "get": {
+                "tags": [
+                    "Matchs & Entraînements"
+                ],
+                "summary": "Liste de tous les matchs/entraînements de la saison active avec bilan",
+                "operationId": "d2c0d1ac47e3554c275a0162ffe732f3",
+                "responses": {
+                    "200": {
+                        "description": "Bilan et liste des matchs de la saison active",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "season": {
+                                            "type": "string",
+                                            "example": "Saison 2026-2027"
+                                        },
+                                        "summary": {
+                                            "properties": {
+                                                "total_played": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "won": {
+                                                    "type": "integer",
+                                                    "example": 6
+                                                },
+                                                "lost": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "drawn": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -3913,6 +3982,156 @@
                     }
                 ]
             }
+        },
+        "/api/contributions/my-financial-summary": {
+            "get": {
+                "tags": [
+                    "Trésorerie"
+                ],
+                "summary": "Obtenir le résumé financier personnel du membre connecté",
+                "description": "Récupère le résumé financier personnel du membre connecté pour la saison active.",
+                "operationId": "cffd37dd4be4f28b36bb12fff0bee7cd",
+                "responses": {
+                    "200": {
+                        "description": "Résumé financier récupéré avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "season": {
+                                            "type": "string",
+                                            "example": "Saison 2026-2027"
+                                        },
+                                        "adhesion_fee": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 10000
+                                        },
+                                        "renewal_fee": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 5000
+                                        },
+                                        "annual_fee": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 50000
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "member_name": {
+                                                    "type": "string",
+                                                    "example": "Emmanuel Dika"
+                                                },
+                                                "global_status": {
+                                                    "type": "string",
+                                                    "example": "En Règle"
+                                                },
+                                                "adhesion": {
+                                                    "properties": {
+                                                        "expected": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 10000
+                                                        },
+                                                        "paid": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 10000
+                                                        },
+                                                        "remaining": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 0
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "Payé"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "annual_fee": {
+                                                    "properties": {
+                                                        "expected": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 50000
+                                                        },
+                                                        "paid": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 17000
+                                                        },
+                                                        "remaining": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 33000
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "Partiel"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "events_participation": {
+                                                    "properties": {
+                                                        "total_paid": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 15000
+                                                        },
+                                                        "recap": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "title": {
+                                                                        "type": "string",
+                                                                        "example": "Match de Gala vs FC Lions"
+                                                                    },
+                                                                    "amount_paid": {
+                                                                        "type": "number",
+                                                                        "format": "float",
+                                                                        "example": 5000
+                                                                    },
+                                                                    "date": {
+                                                                        "type": "string",
+                                                                        "example": "2026-03-12"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Aucune saison active trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -4150,6 +4369,10 @@
         {
             "name": "Événements",
             "description": "Événements"
+        },
+        {
+            "name": "Matchs & Entraînements",
+            "description": "Matchs & Entraînements"
         },
         {
             "name": "Membre & Profil",
