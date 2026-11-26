@@ -2891,6 +2891,146 @@
                 ]
             }
         },
+        "/api/gallery": {
+            "get": {
+                "tags": [
+                    "Galerie"
+                ],
+                "summary": "Liste des photos de la galerie VSM",
+                "operationId": "9f04eba8f10637da7f41b33254912b00",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filtrer par catégorie (match, training, event, general)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "match"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Galerie récupérée avec succès"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Galerie"
+                ],
+                "summary": "Ajouter une photo à la galerie VSM",
+                "description": "Accessible à tous les membres authentifiés du club.",
+                "operationId": "166abfcfe0bd807724ed4646676d4cee",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "photo"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Victoire au Stade Yoro"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Match amical des vétérans",
+                                        "nullable": true
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "match",
+                                        "enum": [
+                                            "match",
+                                            "training",
+                                            "event",
+                                            "general"
+                                        ]
+                                    },
+                                    "photo_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-18",
+                                        "nullable": true
+                                    },
+                                    "photo": {
+                                        "description": "Image JPG, PNG ou WEBP (max 5 Mo)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Photo ajoutée à la galerie"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Données invalides"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/gallery/{id}": {
+            "delete": {
+                "tags": [
+                    "Galerie"
+                ],
+                "summary": "Supprimer une photo de la galerie",
+                "operationId": "f931441c697db8334a6259988249f7bd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Photo supprimée"
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Photo introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/matches/annual-summary": {
             "get": {
                 "tags": [
@@ -4314,6 +4454,75 @@
                     }
                 },
                 "type": "object"
+            },
+            "GalleryItem": {
+                "title": "GalleryItem",
+                "description": "Élément photo de la galerie VSM",
+                "required": [
+                    "id",
+                    "title",
+                    "category",
+                    "image_url"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Victoire au Stade Yoro"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Match amical Vétérans Santé Mahen",
+                        "nullable": true
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "match",
+                        "enum": [
+                            "match",
+                            "training",
+                            "event",
+                            "general"
+                        ]
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "http://127.0.0.1:8000/storage/gallery/photo1.jpg"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-11-19"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-11-19T02:00:00+01:00"
+                    },
+                    "author": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 2
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Membre VSM"
+                            },
+                            "role": {
+                                "type": "string",
+                                "example": "player"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -4369,6 +4578,10 @@
         {
             "name": "Événements",
             "description": "Événements"
+        },
+        {
+            "name": "Galerie",
+            "description": "Galerie"
         },
         {
             "name": "Matchs & Entraînements",

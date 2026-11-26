@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use App\Models\GalleryItem;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
@@ -14,6 +16,8 @@ use App\Http\Controllers\Api\Coach\MatchTacticController;
 use App\Http\Controllers\Api\Coach\MemberAttendanceController;
 use App\Http\Controllers\treasury\TreasuryController;
 use App\Http\Controllers\Api\MatchController;
+use App\Http\Controllers\Api\GalleryController;
+
 /*
 |--------------------------------------------------------------------------
 | Routes Publiques (Accessibles sans authentification)
@@ -21,7 +25,44 @@ use App\Http\Controllers\Api\MatchController;
 */
 
 Route::post('/login', [AuthController::class, 'login']);
-//routes a proteger
+
+// Image galerie publique avec en-têtes CORS (hors auth:sanctum)
+Route::get('/gallery/{id}/image', function (int $id) {
+    $item = GalleryItem::findOrFail($id);
+
+    $raw = trim((string) ($item->image_path ?? $item->image_url ?? ''));
+    if ($raw === '') {
+        abort(404, 'Chemin image vide');
+    }
+
+    if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+        $raw = (string) parse_url($raw, PHP_URL_PATH);
+    }
+
+    $relativePath = preg_replace('#^/?(api/)?storage/#', '', ltrim($raw, '/'));
+    $relativePath = preg_replace('#^public/#', '', (string) $relativePath);
+
+    if ($relativePath === '' || !Storage::disk('public')->exists($relativePath)) {
+        abort(404, 'Fichier introuvable sur le disque public');
+    }
+
+    $fullPath = Storage::disk('public')->path($relativePath);
+    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+    $mimeType = match ($ext) {
+        'png' => 'image/png',
+        'jpg', 'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        default => 'application/octet-stream',
+    };
+
+    return response()->file($fullPath, [
+        'Content-Type' => $mimeType,
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
+    ]);
+});
+
 // Événements publics
 Route::get('/users/pending', [UserController::class, 'pending']);
 Route::apiResource('users', UserController::class);
@@ -62,10 +103,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/president', [DashboardController::class, 'presidentSummary']);
         Route::get('/admin', [DashboardController::class, 'adminSummary']);
     });
-    
-Route::get('/contributions/my-financial-summary', [TreasuryController::class, 'getMyFinancialSummary']);
 
-
+    Route::get('/contributions/my-financial-summary', [TreasuryController::class, 'getMyFinancialSummary']);
 
     // --- FINANCES & COTISATIONS (Membre connecté) ---
     Route::get('/contributions/my-status', [ContributionController::class, 'myStatus']);
@@ -84,17 +123,16 @@ Route::get('/contributions/my-financial-summary', [TreasuryController::class, 'g
             Route::get('/collected-contributions', [FinanceController::class, 'getCollectedContributions']);
         });
 
-     // Décaissements
+        // Décaissements
         Route::prefix('decaissements')->group(function () {
-            Route::get('/', [DecaissementController::class, 'index']); // Liste tous les décaissements
-            Route::post('/', [DecaissementController::class, 'store']); // <--- AJOUTE CETTE LIGNE (C'est elle qui manquait pour le POST /api/admin/decaissements)
+            Route::get('/', [DecaissementController::class, 'index']);
+            Route::post('/', [DecaissementController::class, 'store']);
             Route::get('/pending', [DecaissementController::class, 'getPendingDisbursements']);
-            Route::put('/{id}', [DecaissementController::class, 'update']); 
+            Route::put('/{id}', [DecaissementController::class, 'update']);
             Route::delete('/{id}', [DecaissementController::class, 'destroy']);
             Route::get('/metrics/pending', [DecaissementController::class, 'getPendingMetrics']);
             Route::get('/metrics/executed', [DecaissementController::class, 'getExecutedMetrics']);
             Route::post('/{id}/ordonner', [DecaissementController::class, 'processOrdonnancement']);
-            
         });
     });
 
@@ -103,8 +141,8 @@ Route::get('/contributions/my-financial-summary', [TreasuryController::class, 'g
         Route::post('/{id}/ordonner', [DecaissementController::class, 'processOrdonnancement']);
     });
 
-    // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM (`can:admin-access`) ---
-    Route::middleware(['api','auth:sanctum',])->group(function () {
+    // --- ACCÈS RESTREINT : BUREAU & ADMIN VSM ---
+    Route::middleware(['api', 'auth:sanctum'])->group(function () {
         // Gestion des utilisateurs / membres
         // Route::get('/users/pending', [UserController::class, 'pending']);
         Route::post('/users/{id}/approve', [UserController::class, 'approve']);
@@ -114,41 +152,44 @@ Route::get('/contributions/my-financial-summary', [TreasuryController::class, 'g
         Route::post('/users/{id}/activate', [UserController::class, 'activate']);
         // Route::apiResource('users', UserController::class);
 
-   Route::middleware(['api', 'auth:sanctum'])->group(function () {
+        // --- Routes spécifiques (doivent impérativement rester AVANT /contributions/{id}) ---
+        Route::get('/contributions/my-status', [ContributionController::class, 'getMyStatus']);
+        // Route::get('/contributions/my-financial-summary', [ContributionController::class, 'getMyFinancialSummary']);
+        Route::get('/contributions/members-status', [ContributionController::class, 'membersStatus']);
+        Route::get('/contributions/metrics', [ContributionController::class, 'metrics']);
+        Route::get('/contributions/member-financial-summary/{user}', [ContributionController::class, 'memberFinancialSummary']);
+        Route::get('/contributions/all-members-annual', [ContributionController::class, 'allMembersAnnualStatus']);
 
-    // --- Routes spécifiques (doivent impérativement rester AVANT /contributions/{id}) ---
-    Route::get('/contributions/my-status', [ContributionController::class, 'getMyStatus']);
-    // Route::get('/contributions/my-financial-summary', [ContributionController::class, 'getMyFinancialSummary']);
-    Route::get('/contributions/members-status', [ContributionController::class, 'membersStatus']);
-    Route::get('/contributions/metrics', [ContributionController::class, 'metrics']);
-    Route::get('/contributions/member-financial-summary/{user}', [ContributionController::class, 'memberFinancialSummary']);
-    Route::get('/contributions/all-members-annual', [ContributionController::class, 'allMembersAnnualStatus']);
+        // --- Gestion globale des cotisations (Trésorier/Admin) ---
+        Route::get('/contributions', [ContributionController::class, 'index']);
+        Route::post('/contributions', [ContributionController::class, 'store']);
+        Route::put('/contributions/{id}', [ContributionController::class, 'update']);
+        Route::delete('/contributions/{id}', [ContributionController::class, 'destroy']);
 
-    // --- Gestion globale des cotisations (Trésorier/Admin) ---
-    Route::get('/contributions', [ContributionController::class, 'index']);
-    Route::post('/contributions', [ContributionController::class, 'store']);
-    Route::put('/contributions/{id}', [ContributionController::class, 'update']);
-    Route::delete('/contributions/{id}', [ContributionController::class, 'destroy']);
-
-    // --- Gestion des Matchs et Entraînements (VSM App) ---
-    Route::get('/matches/annual-summary', [MatchController::class, 'annualSummary']);
-    Route::post('/matches', [MatchController::class, 'store']); 
-
-});
+        // --- Gestion des Matchs et Entraînements (VSM App) ---
+        Route::get('/matches/annual-summary', [MatchController::class, 'annualSummary']);
+        Route::post('/matches', [MatchController::class, 'store']);
 
         // Gestion des événements (Création, Modification, Suppression)
         Route::post('/events', [EventController::class, 'store']);
         Route::put('/events/{id}', [EventController::class, 'update']);
         Route::delete('/events/{id}', [EventController::class, 'destroy']);
 
-        // presence a un evenement membre/coach
+        // Présence à un événement membre/coach
         Route::post('/events/{id}/presence', [EventController::class, 'updatePresence']);
         Route::post('/events/{id}/presences/{userId}', [EventController::class, 'updateMemberPresence']);
 
-        // coach
+        // Coach
         // Route::post('/coach/events/{eventId}/tactics/publish', [MatchTacticController::class, 'publish']);
 
         // Annonces (Création/Modification/Suppression)
         Route::apiResource('announcements', AnnouncementController::class)->except(['index', 'show']);
+    });
+
+    // --- GALERIE (CRUD protégé ; la lecture d'image /gallery/{id}/image est publique plus haut) ---
+    Route::prefix('gallery')->group(function () {
+        Route::get('/', [GalleryController::class, 'index']);
+        Route::post('/', [GalleryController::class, 'store']);
+        Route::delete('/{id}', [GalleryController::class, 'destroy']);
     });
 });

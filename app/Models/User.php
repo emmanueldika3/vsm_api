@@ -27,11 +27,6 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -45,20 +40,19 @@ class User extends Authenticatable
     // SCOPES DE REQUÊTE
     // ==========================================
 
-    /**
-     * Scope pour filtrer les membres en attente de validation
-     */
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
     }
 
-    /**
-     * Scope pour filtrer les membres actifs
-     */
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    public function scopeOfRole($query, string $role)
+    {
+        return $query->where('role', $role);
     }
 
     // ==========================================
@@ -68,6 +62,11 @@ class User extends Authenticatable
     public function contributions()
     {
         return $this->hasMany(Contribution::class);
+    }
+
+    public function presences()
+    {
+        return $this->hasMany(EventPresence::class, 'user_id');
     }
 
     // ==========================================
@@ -109,12 +108,21 @@ class User extends Authenticatable
         return $this->role === 'president';
     }
 
+    public function isSecretary(): bool
+    {
+        return $this->role === 'secretary';
+    }
+
     public function isCoach(): bool
     {
         return $this->role === 'coach';
     }
 
-   
+    public function isPlayer(): bool
+    {
+        return $this->role === 'player';
+    }
+
     public function getPhotoUrlAttribute(): ?string
     {
         $photo = $this->attributes['photo_url'] ?? null;
@@ -126,9 +134,6 @@ class User extends Authenticatable
         return null;
     }
 
-    /**
-     * Formatage structuré pour les réponses API REST (Flutter)
-     */
     public function toApiArray(): array
     {
         return [
@@ -144,9 +149,4 @@ class User extends Authenticatable
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
-
-    public function presences()
-{
-    return $this->hasMany(EventPresence::class, 'user_id');
-}
 }
